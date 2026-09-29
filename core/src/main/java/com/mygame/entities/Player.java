@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.World;
 
 public class Player {
 
-    public static final float PPM = 32f;
+    public static final float PPM = 16f;
 
     private static final float SPEED = 120f;
     private static final float SIZE = 16f;
