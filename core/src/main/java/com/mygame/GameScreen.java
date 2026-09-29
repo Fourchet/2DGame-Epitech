@@ -86,7 +86,13 @@ public class GameScreen extends ScreenAdapter {
         ScreenUtils.clear(0.05f, 0.05f, 0.07f, 1f);
         viewport.apply();
 
-        mapRenderer.setView(camera);
+        float margin = 128; // modified so larger render distance
+        mapRenderer.setView(
+            camera.combined,
+            camera.position.x - viewport.getWorldWidth() / 2f - margin,
+            camera.position.y - viewport.getWorldHeight() / 2f - margin,
+            viewport.getWorldWidth() + margin * 2,
+            viewport.getWorldHeight() + margin * 2);
         mapRenderer.render();
 
         shapes.setProjectionMatrix(camera.combined);
