@@ -3,6 +3,28 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
+        "car.tsx": {
+            "dynamicWrapping": true
+        },
+        "flowers.tsx": {
+            "dynamicWrapping": true
+        },
+        "house.tmx": {
+            "scale": 1,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 463,
+                "y": 341.5
+            }
+        },
+        "map.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 436,
+                "y": 341.5
+            }
+        },
         "test.xml": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -11,6 +33,9 @@
             "dynamicWrapping": true
         },
         "tilesets/bloodywall.tsx": {
+            "dynamicWrapping": false
+        },
+        "tilesets/everything.tsx": {
             "dynamicWrapping": false
         },
         "tilesets/wall.tsx": {
@@ -33,5 +58,5 @@
     ],
     "tileset.lastUsedFilter": "All Files (*)",
     "tileset.lastUsedFormat": "tsx",
-    "tileset.type": 0
+    "tileset.type": 1
 }
