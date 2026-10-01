@@ -1,27 +1,39 @@
 {
-    "activeFile": "",
+    "activeFile": "house.tmx",
     "expandedProjectPaths": [
+        ".",
+        "tilesets"
     ],
     "fileStates": {
         "car.tsx": {
-            "dynamicWrapping": true
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "flowers.tsx": {
-            "dynamicWrapping": true
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "house.tmx": {
-            "scale": 1,
-            "selectedLayer": 2,
+            "expandedObjectLayers": [
+                6
+            ],
+            "scale": 0.75,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 463,
-                "y": 341.5
+                "x": 476,
+                "y": 259.33333333333326
             }
         },
         "map.tmx": {
+            "expandedObjectLayers": [
+                3
+            ],
             "scale": 1,
-            "selectedLayer": 0,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 436,
+                "x": 564,
                 "y": 341.5
             }
         },
@@ -30,16 +42,24 @@
             "scaleInEditor": 1
         },
         "tilesets/basics.tsx": {
-            "dynamicWrapping": true
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 0.5
         },
         "tilesets/bloodywall.tsx": {
-            "dynamicWrapping": false
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "tilesets/everything.tsx": {
-            "dynamicWrapping": false
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "tilesets/wall.tsx": {
-            "dynamicWrapping": false
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "walls.tsx": {
             "scaleInDock": 1,
@@ -50,9 +70,25 @@
     "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets",
     "map.lastUsedFormat": "tmx",
     "openFiles": [
+        "map.tmx",
+        "house.tmx",
+        "tilesets/wall.tsx",
+        "tilesets/bloodywall.tsx",
+        "tilesets/basics.tsx",
+        "tilesets/everything.tsx",
+        "car.tsx",
+        "flowers.tsx"
     ],
     "project": "map.tmx.tiled-project",
     "recentFiles": [
+        "map.tmx",
+        "flowers.tsx",
+        "car.tsx",
+        "tilesets/everything.tsx",
+        "tilesets/basics.tsx",
+        "tilesets/bloodywall.tsx",
+        "tilesets/wall.tsx",
+        "house.tmx",
         "walls.tsx",
         "test.xml"
     ],

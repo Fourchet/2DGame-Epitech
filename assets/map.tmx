@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="1">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="7">
  <tileset firstgid="1" source="tilesets/wall.tsx"/>
  <tileset firstgid="2" source="tilesets/bloodywall.tsx"/>
  <tileset firstgid="3" source="tilesets/everything.tsx"/>
@@ -52,4 +52,12 @@
 22,22,22,22,22,22,22,22,22,51,51,53,53,52,52,51,22,22,60,60,60,60,22,22,22,22,22,22,22,22
 </data>
  </layer>
+ <objectgroup id="3" name="Object Layer 1">
+  <object id="1" x="0" y="0" width="10" height="641"/>
+  <object id="2" x="950" y="1" width="11" height="639"/>
+  <object id="3" x="0" y="629" width="962" height="12"/>
+  <object id="4" x="545" y="1" width="418" height="10"/>
+  <object id="5" x="1" y="1" width="321" height="9"/>
+  <object id="6" x="8" y="-62"/>
+ </objectgroup>
 </map>

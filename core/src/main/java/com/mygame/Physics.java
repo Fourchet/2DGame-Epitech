@@ -10,13 +10,13 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
-/** Box2D helpers. Box2D works in meters, the game works in pixels: PPM converts between them. */
+// Box2D helpers. Box2D works in meters, the game works in pixels: PPM converts between them. 
 public final class Physics {
     public static final float PPM = 16f; // pixels per meter
 
     private Physics() {}
 
-    /** Creates a static wall body for every rectangle in the map's "collisions" object layer. */
+    // Creates a static wall body for every rectangle in the map's "collisions" object layer. 
     public static void createWalls(World world, TiledMap map) {
         MapLayer layer = map.getLayers().get("collisions");
         if (layer == null) return;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="1">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="24">
  <tileset firstgid="1" source="tilesets/everything.tsx"/>
  <tileset firstgid="65" source="car.tsx"/>
  <layer id="1" name="Tile Layer 1" width="30" height="20">
@@ -74,4 +74,25 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="6" name="collisions">
+  <object id="4" x="0.5" y="233.5" width="207" height="86.5"/>
+  <object id="5" x="707.5" y="132.5" width="156" height="219.5"/>
+  <object id="6" x="641" y="193.5" width="286.5" height="94"/>
+  <object id="7" x="864.5" y="288" width="31" height="30.5"/>
+  <object id="8" x="673" y="288.5" width="32" height="32"/>
+  <object id="9" x="672.5" y="160.5" width="38" height="42"/>
+  <object id="10" x="853" y="160.5" width="42" height="36"/>
+  <object id="11" x="117.5" y="531.75" width="55.75" height="56.75"/>
+  <object id="12" x="55.75" y="404.5" width="48.75" height="54.75"/>
+  <object id="13" x="859" y="538.333" width="45" height="44.3333"/>
+  <object id="14" x="537.5" y="89.5" width="44" height="43.5"/>
+  <object id="15" x="859" y="22" width="40.5" height="46"/>
+  <object id="16" x="288" y="0" width="320.5" height="31"/>
+  <object id="17" x="0" y="0" width="256" height="33"/>
+  <object id="18" x="-6" y="2.66667" width="6" height="644.667"/>
+  <object id="19" x="-6" y="640.667" width="326.667" height="8"/>
+  <object id="20" x="512" y="640.667" width="459.333" height="6.66667"/>
+  <object id="21" x="961.333" y="-9.33333" width="10" height="654.667"/>
+  <object id="22" x="607.333" y="-10" width="356" height="10.6667"/>
+ </objectgroup>
 </map>

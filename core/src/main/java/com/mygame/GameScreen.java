@@ -1,5 +1,7 @@
 package com.mygame;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -12,15 +14,25 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygame.entities.Player;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mygame.entities.PlayerRenderer;
 
 public class GameScreen extends ScreenAdapter {
-
     private static final float WORLD_WIDTH = 640;
     private static final float WORLD_HEIGHT = 360;
+    private SpriteBatch batch;
+    private PlayerRenderer playerRenderer;
+
+    private static final float LOOK_AHEAD = 0.4f;       // how far the camera leans toward the mouse
+    private static final float SHIFT_LOOK_AHEAD = 1.0f; // while holding Shift
+    private static final float CAMERA_SMOOTHING = 6f;   
 
     private final OrthographicCamera camera = new OrthographicCamera();
     private final FitViewport viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
     private final ShapeRenderer shapes = new ShapeRenderer();
+
+    private final Vector2 mouse = new Vector2();
+    private float camX, camY; // smooth camera position 
 
     private World world;
     private Player player;
@@ -34,11 +46,14 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void show() {
         Box2D.init();
+        batch = new SpriteBatch();
+        playerRenderer = new PlayerRenderer();
         loadMap("map.tmx");
         player = new Player(world, mapWidth / 2f, mapHeight / 2f);
+        snapCameraToPlayer();
     }
 
-    /** Replaces the current map and physics world with a new one. */
+    //physics stuff
     private void loadMap(String fileName) {
         if (map != null) map.dispose();
         if (world != null) world.dispose();
@@ -67,6 +82,7 @@ public class GameScreen extends ScreenAdapter {
         if (currentMap.equals("map.tmx") && py >= mapHeight - 8) {
             loadMap("house.tmx");
             player = new Player(world, mapWidth / 2f, 24); // bottom-center of the house
+            snapCameraToPlayer(); // no swoop across the new map
         }
     }
 
@@ -76,17 +92,12 @@ public class GameScreen extends ScreenAdapter {
         world.step(Math.min(delta, 1f / 30f), 6, 2);
         checkMapTransition();
 
-        // camera follows the player
-        camera.position.set(
-            player.getPosition().x * Physics.PPM,
-            player.getPosition().y * Physics.PPM,
-            0);
-        camera.update();
+        updateCamera(delta);
 
         ScreenUtils.clear(0.05f, 0.05f, 0.07f, 1f);
         viewport.apply();
 
-        float margin = 128; // modified so larger render distance
+        float margin = 128; // larger render distance
         mapRenderer.setView(
             camera.combined,
             camera.position.x - viewport.getWorldWidth() / 2f - margin,
@@ -95,15 +106,53 @@ public class GameScreen extends ScreenAdapter {
             viewport.getWorldHeight() + margin * 2);
         mapRenderer.render();
 
-        shapes.setProjectionMatrix(camera.combined);
-        shapes.begin(ShapeRenderer.ShapeType.Filled);
-        player.draw(shapes);
-        shapes.end();
+        float px = player.getPosition().x * Physics.PPM; // replaces the placeholder greysquare with the custom character i made, !!!!!! DO LEGS NEXT !!!!!!
+        float py = player.getPosition().y * Physics.PPM;
+        playerRenderer.update(delta, px, py);
+        playerRenderer.aimAt(px, py, mouse.x, mouse.y);
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        playerRenderer.draw(batch, px, py);
+        batch.end();
+    }
+
+    /** Camera follows the player but leans toward the mouse. TUNE IT DOWN A BIT LATER*/
+    private void updateCamera(float delta) {
+        float px = player.getPosition().x * Physics.PPM;
+        float py = player.getPosition().y * Physics.PPM;
+
+        // Mouse position relative to the center of the screen, in world pixels
+        mouse.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(mouse);
+        float offsetX = mouse.x - camera.position.x;
+        float offsetY = mouse.y - camera.position.y;
+
+        float lean = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? SHIFT_LOOK_AHEAD : LOOK_AHEAD;
+        float targetX = px + offsetX * lean;
+        float targetY = py + offsetY * lean;
+
+        // Slide toward the target instead of snapping
+        float t = Math.min(1f, CAMERA_SMOOTHING * delta);
+        camX += (targetX - camX) * t;
+        camY += (targetY - camY) * t;
+
+        // Whole pixels only, so no seams between tiles
+        camera.position.set(Math.round(camX), Math.round(camY), 0);
+        camera.update();
+    }
+
+    /** Puts the camera directly on the player (used at spawn and on map change). */
+    private void snapCameraToPlayer() {
+        camX = player.getPosition().x * Physics.PPM;
+        camY = player.getPosition().y * Physics.PPM;
+        camera.position.set(Math.round(camX), Math.round(camY), 0);
+        camera.update();
     }
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true);
+        viewport.update(width, height, false);
     }
 
     @Override
@@ -112,5 +161,8 @@ public class GameScreen extends ScreenAdapter {
         if (mapRenderer != null) mapRenderer.dispose();
         if (map != null) map.dispose();
         if (world != null) world.dispose();
+
+        if (batch != null) batch.dispose();
+        if (playerRenderer != null) playerRenderer.dispose();
     }
 }
