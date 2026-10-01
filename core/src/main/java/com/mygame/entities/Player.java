@@ -10,10 +10,9 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.mygame.Physics;
 
 public class Player {
-
-    public static final float PPM = 16f;
 
     private static final float SPEED = 120f;
     private static final float SIZE = 16f;
@@ -27,8 +26,8 @@ public class Player {
         bodyDef.type = BodyDef.BodyType.DynamicBody;
 
         bodyDef.position.set(
-                x / PPM,
-                y / PPM);
+                x / Physics.PPM,
+                y / Physics.PPM);
 
         // créer le body
         body = world.createBody(bodyDef);
@@ -37,8 +36,8 @@ public class Player {
         PolygonShape shape = new PolygonShape();
 
         shape.setAsBox(
-                SIZE / 2f / PPM,
-                SIZE / 2f / PPM);
+                SIZE / 2f / Physics.PPM,
+                SIZE / 2f / Physics.PPM);
 
         // associe la forme au body
         FixtureDef fixtureDef = new FixtureDef();
@@ -78,8 +77,8 @@ public class Player {
             direction.nor();
 
             body.setLinearVelocity(
-                    direction.x * SPEED / PPM,
-                    direction.y * SPEED / PPM);
+                    direction.x * SPEED / Physics.PPM,
+                    direction.y * SPEED / Physics.PPM);
         } else {
             body.setLinearVelocity(0, 0);
         }
@@ -87,8 +86,8 @@ public class Player {
 
     public void draw(ShapeRenderer shapes) {
 
-        float x = body.getPosition().x * PPM;
-        float y = body.getPosition().y * PPM;
+        float x = body.getPosition().x * Physics.PPM;
+        float y = body.getPosition().y * Physics.PPM;
 
         shapes.setColor(Color.LIGHT_GRAY);
 
