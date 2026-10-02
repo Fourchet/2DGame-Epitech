@@ -13,9 +13,11 @@ import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.mygame.collisions.GameContactListener;
 import com.mygame.entities.Player;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygame.entities.PlayerRenderer;
+import com.mygame.entities.Zombie;
 
 public class GameScreen extends ScreenAdapter {
     private static final float WORLD_WIDTH = 640;
@@ -36,6 +38,7 @@ public class GameScreen extends ScreenAdapter {
 
     private World world;
     private Player player;
+    private Zombie zombie;
 
     private TiledMap map;
     private OrthogonalTiledMapRenderer mapRenderer;
@@ -50,6 +53,7 @@ public class GameScreen extends ScreenAdapter {
         playerRenderer = new PlayerRenderer();
         loadMap("map.tmx");
         player = new Player(world, mapWidth / 2f, mapHeight / 2f);
+        zombie = new Zombie(world, mapWidth / 2f, mapHeight / 2f);
         snapCameraToPlayer();
     }
 
@@ -73,6 +77,7 @@ public class GameScreen extends ScreenAdapter {
         }
 
         world = new World(new Vector2(0, 0), true);
+        world.setContactListener(new GameContactListener());
         Physics.createWalls(world, map);
     }
 
@@ -89,6 +94,7 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void render(float delta) {
         player.update();
+        zombie.update(player, delta);
         world.step(Math.min(delta, 1f / 30f), 6, 2);
         checkMapTransition();
 
@@ -115,6 +121,10 @@ public class GameScreen extends ScreenAdapter {
         batch.begin();
         playerRenderer.draw(batch, px, py);
         batch.end();
+        shapes.setProjectionMatrix(camera.combined);
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
+        zombie.draw(shapes);
+        shapes.end();
     }
 
     /** Camera follows the player but leans toward the mouse. TUNE IT DOWN A BIT LATER*/
@@ -164,5 +174,5 @@ public class GameScreen extends ScreenAdapter {
 
         if (batch != null) batch.dispose();
         if (playerRenderer != null) playerRenderer.dispose();
-    }
+    }    
 }

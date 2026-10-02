@@ -2,8 +2,6 @@ package com.mygame.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -17,6 +15,7 @@ public class Player {
     private static final float SPEED = 120f;
     private static final float SIZE = 16f;
 
+    private int health = 250;
     private final Body body;
     private final Vector2 direction = new Vector2();
 
@@ -84,25 +83,26 @@ public class Player {
         }
     }
 
-    public void draw(ShapeRenderer shapes) {
 
-        float x = body.getPosition().x * Physics.PPM;
-        float y = body.getPosition().y * Physics.PPM;
-
-        shapes.setColor(Color.LIGHT_GRAY);
-
-        shapes.rect(
-                x - SIZE / 2f,
-                y - SIZE / 2f,
-                SIZE,
-                SIZE);
+    public void TakeDamage(int damageSustained){
+        this.health -= damageSustained;
+        System.out.println(this + "is taking damage, he has now " + health +"hp");
+        if (this.health < 0){
+            this.health = 0;
+            System.out.println("Player's dead");
+        }
     }
 
+    // getters 
     public Body getBody() {
         return body;
     }
 
     public Vector2 getPosition() {
         return body.getPosition();
+    }
+
+    public int getHealth() {
+      return health;
     }
 }
