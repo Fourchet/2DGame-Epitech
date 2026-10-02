@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="40" height="26" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="28">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="40" height="26" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="33">
  <tileset firstgid="1" source="tilesets/everything.tsx"/>
  <tileset firstgid="65" source="car.tsx"/>
  <tileset firstgid="77" source="flooring.tsx"/>
@@ -115,12 +115,13 @@
   <object id="22" x="767.333" y="86" width="356" height="10.6667"/>
  </objectgroup>
  <objectgroup id="7" name="events">
-  <object id="24" x="416.667" y="96.6667" width="31.3333" height="30">
+  <object id="24" x="416.94" y="96.0303" width="31.3333" height="30">
    <properties>
     <property name="spawn" value="house_inside"/>
     <property name="target" value="house_interior.tmx"/>
    </properties>
   </object>
   <object id="26" name="house_entrance" x="553.333" y="500" width="44.6667" height="30"/>
+  <object id="28" name="house_exit" x="400" y="153" width="66.5" height="25"/>
  </objectgroup>
 </map>
