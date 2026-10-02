@@ -18,6 +18,7 @@ import com.mygame.entities.Player;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygame.entities.PlayerRenderer;
 import com.mygame.entities.Zombie;
+import com.badlogic.gdx.maps.MapObject;
 
 public class GameScreen extends ScreenAdapter {
     private static final float WORLD_WIDTH = 640;
@@ -55,6 +56,7 @@ public class GameScreen extends ScreenAdapter {
         player = new Player(world, mapWidth / 2f, mapHeight / 2f);
         zombie = new Zombie(world, mapWidth / 2f, mapHeight / 2f);
         snapCameraToPlayer();
+        spawnPlayer("start");
     }
 
     //physics stuff
@@ -82,13 +84,25 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void checkMapTransition() {
+        float px = player.getPosition().x * Physics.PPM;
         float py = player.getPosition().y * Physics.PPM;
 
-        if (currentMap.equals("map.tmx") && py >= mapHeight - 8) {
-            loadMap("house.tmx");
-            player = new Player(world, mapWidth / 2f, 24); // bottom-center of the house
-            snapCameraToPlayer(); // no swoop across the new map
-        }
+        MapObject door = MapEvents.findDoorAt(map, px, py);
+        if (door == null) return;
+
+        String target = door.getProperties().get("target", String.class);
+        String spawn = door.getProperties().get("spawn", String.class);
+        loadMap(target);
+        spawnPlayer(spawn);
+    }
+
+    //  spawns player at a named spawn point, or the middle of the map if it doesn't exist. 
+    private void spawnPlayer(String spawnName) {
+        Vector2 pos = MapEvents.findSpawn(map, spawnName);
+        if (pos == null) pos = new Vector2(mapWidth / 2f, mapHeight / 2f);
+
+        player = new Player(world, pos.x, pos.y);
+        snapCameraToPlayer();
     }
 
     @Override
