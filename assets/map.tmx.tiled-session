@@ -11,6 +11,7 @@
             "scaleInEditor": 1
         },
         "flooring.tsx": {
+            "dynamicWrapping": true,
             "scaleInDock": 1
         },
         "flowers.tsx": {
@@ -24,10 +25,10 @@
                 7
             ],
             "scale": 2,
-            "selectedLayer": 4,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 357.5,
-                "y": 112.75
+                "x": 513.5,
+                "y": -31.25
             }
         },
         "house_interior.tmx": {
@@ -35,11 +36,11 @@
                 3,
                 2
             ],
-            "scale": 1.5,
-            "selectedLayer": 2,
+            "scale": 4,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 680,
-                "y": 528.3333333333334
+                "x": 886.25,
+                "y": 408.875
             }
         },
         "map.tmx": {
@@ -89,7 +90,7 @@
         }
     },
     "last.externalTilesetPath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets",
-    "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets/Wooden Planks",
+    "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/sprites",
     "map.height": 70,
     "map.lastUsedFormat": "tmx",
     "map.width": 100,
