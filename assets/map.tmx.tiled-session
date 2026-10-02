@@ -36,11 +36,11 @@
                 3,
                 2
             ],
-            "scale": 4,
-            "selectedLayer": 0,
+            "scale": 1.5,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 886.25,
-                "y": 408.875
+                "x": 598,
+                "y": 448.33333333333337
             }
         },
         "map.tmx": {
