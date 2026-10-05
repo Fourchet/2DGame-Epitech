@@ -27,7 +27,7 @@ public class GameScreen extends ScreenAdapter {
     private PlayerRenderer playerRenderer;
 
     private static final float LOOK_AHEAD = 0.4f;       // how far the camera leans toward the mouse
-    private static final float SHIFT_LOOK_AHEAD = 1.0f; // while holding Shift
+    //private static final float SHIFT_LOOK_AHEAD = 1.0f; // while holding Shift
     private static final float CAMERA_SMOOTHING = 6f;   
 
     private final OrthographicCamera camera = new OrthographicCamera();
@@ -152,9 +152,8 @@ public class GameScreen extends ScreenAdapter {
         float offsetX = mouse.x - camera.position.x;
         float offsetY = mouse.y - camera.position.y;
 
-        float lean = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? SHIFT_LOOK_AHEAD : LOOK_AHEAD;
-        float targetX = px + offsetX * lean;
-        float targetY = py + offsetY * lean;
+        float targetX = px + offsetX * LOOK_AHEAD;
+        float targetY = py + offsetY * LOOK_AHEAD;
 
         // Slide toward the target instead of snapping
         float t = Math.min(1f, CAMERA_SMOOTHING * delta);
