@@ -10,6 +10,8 @@ import com.badlogic.gdx.math.MathUtils;
 public class PlayerRenderer {
     private static final float FRAME_DURATION = 0.1f; // seconds per leg frame, lower = faster steps
     private static final float IDLE_FRAME_DURATION = 0.8f; // seconds per breathing frame, higher = slower breathing
+    private static final float SCALE = 0.7f; //downscaling character
+    private static final int GUN_FRAME_WIDTH = 100; //a bit larger than default because he has long arms when holding the gun
 
     private final Texture torsoTexture;
     private final Animation<TextureRegion> torsoIdle;
@@ -112,7 +114,7 @@ public class PlayerRenderer {
         float h = region.getRegionHeight();
         // Rotates around the center of the image
         batch.draw(region, Math.round(x) - w / 2f, Math.round(y) - h / 2f,
-                w / 2f, h / 2f, w, h, 1f, 1f, angle);
+                w / 2f, h / 2f, w, h, SCALE, SCALE, angle);
     }
 
     public void dispose() {
