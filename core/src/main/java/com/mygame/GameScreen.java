@@ -119,6 +119,7 @@ public class GameScreen extends ScreenAdapter {
 
         world.step(Math.min(delta, 1f / 30f), 6, 2);
         bullet_factory.removeDestroyedBullets(world);
+        factory.removeDeadEnemies(world);
         checkMapTransition();
 
         cameraController.updateCamera(player, delta);
