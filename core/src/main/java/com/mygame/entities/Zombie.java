@@ -62,21 +62,12 @@ public class Zombie extends Enemy {
   @Override 
   public void attack(Player player){
     System.out.println("Zombie attack "+ player);
-    player.TakeDamage(this.damage);
+    player.takeDamage(this.damage);
   }
 
 
   public void setTouchingPlayer(boolean touchingPlayer) {
     this.touchingPlayer = touchingPlayer;
-  }
-
-  public void TakeDamage(int damageSustained){
-    this.health -= damageSustained;
-
-    if (this.health < 0){
-      this.health = 0;
-      System.out.println("Zombie's dead");
-    }
   }
 
   public void recoverHealth(){

@@ -94,6 +94,15 @@ public abstract class Enemy {
     this.health = health;
   }
 
+
+  public void takeDamage(int damageSustained){
+    this.health -= damageSustained;
+
+    if (this.health < 0){
+      this.health = 0;
+    }
+    System.out.println(getClass().getName() + " has " + health);
+  }
   
   // abstract methods
   public abstract void update(Player player, float delta);

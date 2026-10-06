@@ -121,7 +121,7 @@ public class Player {
         bulletManager.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);
     }  
 
-    public void TakeDamage(int damageSustained){
+    public void takeDamage(int damageSustained){
         this.health -= damageSustained;
         System.out.println(this + "is taking damage, he has now " + health +"hp");
         if (this.health < 0){

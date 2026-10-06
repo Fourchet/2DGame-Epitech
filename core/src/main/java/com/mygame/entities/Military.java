@@ -104,17 +104,8 @@ public class Military extends Enemy {
       
   }
 
-  public void TakeDamage(int damageSustained){
-    this.health -= damageSustained;
-
-    if (this.health < 0){
-      this.health = 0;
-      System.out.println("Military's dead");
-    }
-  }
-
   private void meleeAttack(Player player){
-    player.TakeDamage(getDamage());
+    player.takeDamage(getDamage());
   }
 
   private void shoot(Player player){
