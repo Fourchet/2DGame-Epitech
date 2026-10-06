@@ -18,7 +18,16 @@ public class BulletManager {
     System.out.println("Bullet created. Total bullets: " + bulletsArray.size);
   }
 
+  public void removeDestroyedBullets(World world) {
+      for (int i = bulletsArray.size - 1; i >= 0; i--) {
+          Bullet bullet = bulletsArray.get(i);
 
+          if (bullet.isDestroyed()) {
+              world.destroyBody(bullet.getBody());
+              bulletsArray.removeIndex(i);
+          }
+      }
+  }
 
   public void draw(ShapeRenderer shapes) {
       for (Bullet bullet : bulletsArray) {

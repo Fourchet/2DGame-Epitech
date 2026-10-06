@@ -14,11 +14,11 @@ public abstract class Enemy {
 
   private static final float SIZE = 16f;
 
-  protected int health;
-  protected int damage;
+  protected float health;
+  protected float damage;
   protected final Body body;
 
-  public Enemy(World world, float x, float y, int health, int damage) {
+  public Enemy(World world, float x, float y, float health, float damage) {
     this.health = health;
     this.damage = damage;
 
@@ -78,11 +78,11 @@ public abstract class Enemy {
     return body.getPosition();
   }
 
-  public int getDamage() {
+  public float getDamage() {
     return damage;
   }
 
-  public int getHealth() {
+  public float getHealth() {
     return health;
   }
 
@@ -95,7 +95,7 @@ public abstract class Enemy {
   }
 
 
-  public void takeDamage(int damageSustained){
+  public void takeDamage(float damageSustained){
     this.health -= damageSustained;
 
     if (this.health < 0){

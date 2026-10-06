@@ -24,7 +24,7 @@ public class Military extends Enemy {
   private float attackTimer = 0f;
 
   public Military(World world, float x, float y, Weapon weapon, BulletManager bulletManager) {
-    super(world, x, y,150, 12 );
+    super(world, x, y,150f, 12f );
     this.weapon  = weapon;
     this.world = world;
     this.bulletManager = bulletManager;

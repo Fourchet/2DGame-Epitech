@@ -10,7 +10,7 @@ public abstract class Weapon {
   protected int actualBullets;
   protected boolean isReloading = false;
   
-  public Weapon(String name, int damage, float bulletSpeed, int maxBullets, float reloadTime){
+  public Weapon(String name, float damage, float bulletSpeed, int maxBullets, float reloadTime){
     this.damage = damage;
     this.name = name;
     this.bulletSpeed = bulletSpeed;

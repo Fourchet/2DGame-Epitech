@@ -4,8 +4,11 @@ import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.mygame.entities.Bullet;
+import com.mygame.entities.Enemy;
 import com.mygame.entities.Player;
 import com.mygame.entities.Zombie;
+import com.mygame.system.BulletOwner;
 
 public class GameContactListener implements ContactListener {
 
@@ -23,6 +26,31 @@ public class GameContactListener implements ContactListener {
         if (objectB instanceof Zombie && objectA instanceof Player) {
             Zombie zombie = (Zombie) objectB;
             zombie.setTouchingPlayer(true);
+        }
+
+        if (objectA instanceof Bullet) {
+            Bullet bullet = (Bullet) objectA;
+            bulletCollision(bullet, objectB);
+        }
+
+        if (objectB instanceof Bullet) {
+            Bullet bullet = (Bullet) objectB;
+            bulletCollision(bullet,objectA);
+        }
+    }
+
+
+    private void bulletCollision(Bullet bullet,Object target) {
+        if (bullet.getOwner() == BulletOwner.PLAYER && target instanceof Enemy) {
+            Enemy enemy = (Enemy) target;
+            enemy.takeDamage(bullet.getDamage());
+            bullet.destroy();
+        }
+
+        if (bullet.getOwner() == BulletOwner.ENEMY && target instanceof Player) {
+            Player player = (Player) target;
+            player.takeDamage(bullet.getDamage());
+            bullet.destroy();
         }
     }
 
