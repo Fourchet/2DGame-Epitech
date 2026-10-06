@@ -17,6 +17,7 @@ public class Bullet {
     private final BulletOwner owner;
     private final Body body;
     private final float damage;
+    private boolean destroyed = false;
     
     public Bullet(
             World world,
@@ -77,6 +78,10 @@ public class Bullet {
     }
 
 
+    public void destroy(){
+        destroyed = true;
+    }
+
     // getters 
 
     public Body getBody() {
@@ -93,5 +98,9 @@ public class Bullet {
 
     public BulletOwner getOwner() {
       return owner;
+    }
+
+    public boolean isDestroyed(){
+        return destroyed;
     }
 }

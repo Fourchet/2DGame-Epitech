@@ -143,7 +143,6 @@ public class GameScreen extends ScreenAdapter {
         String spawn = door.getProperties().get("spawn", String.class);
         loadMap(target);
         zombieRenderers.clear(); // old zombies died with the old world
-        // TODO enemies and bullets in the managers still point to the old world, needs a clear() on both
         spawnPlayer(spawn);
     }
 
@@ -196,6 +195,7 @@ public class GameScreen extends ScreenAdapter {
         factory.update(player, delta);
 
         world.step(Math.min(delta, 1f / 30f), 6, 2);
+        bullet_factory.removeDestroyedBullets(world);
         checkMapTransition();
 
         updateCamera(delta);
