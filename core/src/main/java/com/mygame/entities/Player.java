@@ -9,6 +9,9 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
+import com.mygame.factory.BulletFactory;
+import com.mygame.items.Weapon;
+import com.mygame.system.BulletOwner;
 
 public class Player {
 
@@ -18,8 +21,10 @@ public class Player {
     private int health = 250;
     private final Body body;
     private final Vector2 direction = new Vector2();
+    private Weapon weapon;
 
-    public Player(World world, float x, float y) {
+    public Player(World world, float x, float y, Weapon weapon) {
+        this.weapon = weapon;
         // decrit le corps physique sans le créer
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -53,9 +58,13 @@ public class Player {
         body.setUserData(this);
     }
 
-    public void update() {
-        direction.setZero();
+    public void update(Vector2 mousePosition, World world,BulletFactory bulletFactory, float delta) {
+        if (weapon != null){
+            weapon.update(delta);
+        }
 
+        direction.setZero();
+        
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             direction.y += 1;
         }
@@ -72,6 +81,12 @@ public class Player {
             direction.x += 1;
         }
 
+        // shoot
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            this.shoot(mousePosition, this.weapon, bulletFactory, world);
+            System.out.println("Left is pressed");
+        }
+
         if (!direction.isZero()) {
             direction.nor();
 
@@ -83,6 +98,28 @@ public class Player {
         }
     }
 
+
+    public void shoot(Vector2 target,Weapon weapon,BulletFactory bulletFactory, World world) {
+        if (weapon == null ){
+            return;
+        }
+
+        if (!weapon.canShoot()){
+            if (weapon.getActualBullets() == 0){
+                weapon.Reload();
+            }
+            return;
+        }
+
+        float playerX = body.getPosition().x * Physics.PPM;
+        float playerY = body.getPosition().y * Physics.PPM;
+        Vector2 shootDirection = new Vector2(target.x - playerX, target.y - playerY).nor();
+        float bulletSpawnOffset = 12f;
+        float spawnX = playerX + shootDirection.x * bulletSpawnOffset;
+        float spawnY = playerY + shootDirection.y * bulletSpawnOffset;
+
+        bulletFactory.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);
+    }  
 
     public void TakeDamage(int damageSustained){
         this.health -= damageSustained;
@@ -104,5 +141,11 @@ public class Player {
 
     public int getHealth() {
       return health;
+    }
+
+    // setters 
+
+    public void setWeapon(Weapon weapon) {
+      this.weapon = weapon;
     }
 }
