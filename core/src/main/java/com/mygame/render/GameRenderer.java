@@ -83,7 +83,10 @@ public class GameRenderer {
             }
             float zx = z.getPosition().x * Physics.PPM;
             float zy = z.getPosition().y * Physics.PPM;
-            r.update(delta, zx, zy, px, py);
+            // if the enemy is dead, we don't update the player pos
+            if (!z.isDead()) {
+              r.update(delta, zx, zy, px, py);
+            }
             if (MathUtils.random() < delta * 0.15f) sounds.playGroan(zx - px, zy - py); // a groan every ~7 s per zombie
             r.draw(batch, zx, zy);
         }

@@ -3,6 +3,8 @@ package com.mygame.entities;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -17,6 +19,10 @@ public abstract class Enemy {
   protected float health;
   protected float damage;
   protected final Body body;
+
+  private static final float DEATH_DELAY = 5f;
+  private boolean dead = false;
+  private float deathTimer = DEATH_DELAY;
 
   public Enemy(World world, float x, float y, float health, float damage) {
     this.health = health;
@@ -86,6 +92,12 @@ public abstract class Enemy {
     return health;
   }
 
+  public boolean isDead() {
+    return dead;
+  }
+
+  // setters 
+
   public void setDamage(int damage) {
     this.damage = damage;
   }
@@ -98,10 +110,33 @@ public abstract class Enemy {
   public void takeDamage(float damageSustained){
     this.health -= damageSustained;
 
-    if (this.health < 0){
+    if (this.health <= 0 && !dead){
       this.health = 0;
+      dead = true;
+      body.setLinearVelocity(0, 0);
+      body.setAngularVelocity(0);
+      body.setFixedRotation(true);
     }
     System.out.println(getClass().getName() + " has " + health);
+  }
+  
+  public void updateDeath(float delta) {
+    if (!dead) {
+        return;
+    }
+    deathTimer -= delta;
+  }
+
+  public void disableCollision() {
+    for (Fixture fixture : body.getFixtureList()) {
+        Filter filter = fixture.getFilterData();
+        filter.maskBits = 0;
+        fixture.setFilterData(filter);
+    }
+  }
+
+  public boolean canBeDisable() {
+      return dead && deathTimer <= 0f;
   }
   
   // abstract methods

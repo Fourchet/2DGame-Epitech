@@ -31,6 +31,10 @@ public class EnemiesManager {
     public void update(Player player, float delta) {
 
         for (Enemy enemy : enemies) {
+            if (enemy.isDead()) {
+                enemy.updateDeath(delta);
+                continue;
+            }
             enemy.update(player, delta);
         }
     }
@@ -42,6 +46,17 @@ public class EnemiesManager {
             enemy.draw(shapes);
         }
     }
+
+    public void removeDeadEnemies(World world) {
+        for (int i = enemies.size - 1; i >= 0; i--) {
+            Enemy enemy = enemies.get(i);
+
+            if (enemy.canBeDisable()) {
+                enemy.disableCollision();
+                enemies.removeIndex(i);
+            }
+        }
+    }   
 
     public Array<Enemy> getEnemies() {
         return enemies;
