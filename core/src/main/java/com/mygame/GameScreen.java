@@ -191,7 +191,7 @@ public class GameScreen extends ScreenAdapter {
 
         // reload sound when a reload starts
         boolean reloading = currentWeapon.getIsReloading();
-        if (reloading && !wasReloading) sounds.playReload();
+        if (reloading && !wasReloading) sounds.playReload(currentWeapon == rifle);
         wasReloading = reloading;
         factory.update(player, delta);
 

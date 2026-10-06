@@ -12,14 +12,16 @@ public class SoundManager {
     private final Array<Sound> loaded = new Array<>(); // everything to dispose
     private final Sound pistolShot;
     private final Sound rifleShot;
-    private final Sound reload;
+    private final Sound reloadPistol;
+    private final Sound reloadRifle;
     private final Sound dryFire;
     private final Array<Sound> groans = new Array<>(); // picked at random so it doesn't loop the same one
 
     public SoundManager() {
         pistolShot = load("sounds/pistol.wav");
         rifleShot = load("sounds/rifle.wav");
-        reload = load("sounds/reload.wav");
+        reloadPistol = load("sounds/reload_pistol.wav");
+        reloadRifle = load("sounds/reload_ak.wav");
         dryFire = load("sounds/dry_fire.wav");
         for (int i = 1; i <= 3; i++) {
             Sound groan = load("sounds/zombie_groan" + i + ".wav");
@@ -27,25 +29,31 @@ public class SoundManager {
         }
     }
 
-    // null if the file isn't there yet
+    // null if the file isn't there yet or can't be read (wrong format), the game keeps running
     private Sound load(String path) {
         if (!Gdx.files.internal(path).exists()) return null;
-        Sound sound = Gdx.audio.newSound(Gdx.files.internal(path));
-        loaded.add(sound);
-        return sound;
+        try {
+            Sound sound = Gdx.audio.newSound(Gdx.files.internal(path));
+            loaded.add(sound);
+            return sound;
+        } catch (Exception e) {
+            Gdx.app.error("SoundManager", "can't load " + path + ": " + e.getMessage());
+            return null;
+        }
     }
 
     private void play(Sound sound, float volume) {
         if (sound == null) return;
-        sound.play(volume, MathUtils.random(0.92f, 1.08f), 0f); 
+        sound.play(volume, MathUtils.random(0.92f, 1.08f), 0f); // small pitch change so it's not robotic
     }
 
     public void playShot(boolean rifle) {
         play(rifle ? rifleShot : pistolShot, rifle ? 0.7f : 0.6f);
     }
 
-    public void playReload() {
-        play(reload, 0.5f);
+    // each gun has its own reload
+    public void playReload(boolean rifle) {
+        play(rifle ? reloadRifle : reloadPistol, 0.5f);
     }
 
     // clicking with an empty mag
@@ -53,13 +61,13 @@ public class SoundManager {
         play(dryFire, 0.5f);
     }
 
-    
+    // dx dy = zombie minus player, louder when close, left or right depending on where it is
     public void playGroan(float dx, float dy) {
         if (groans.size == 0) return;
         float distance = (float) Math.sqrt(dx * dx + dy * dy);
         if (distance > HEARING_DISTANCE) return;
         float volume = 0.6f * (1f - distance / HEARING_DISTANCE);
-        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); 
+        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files
         groans.random().play(volume, MathUtils.random(0.85f, 1.05f), pan);
     }
 

@@ -41,6 +41,13 @@ public class PlayerRenderer {
     private float fireTime;
     private boolean firing;
 
+    // reload anims, null until the strip exists
+    private Texture torsoPistolReloadTexture;
+    private TextureRegion[] torsoPistolReload;
+    private Texture torsoRifleReloadTexture;
+    private TextureRegion[] torsoRifleReload;
+    private float reloadProgress = -1f; // 0 to 1 while reloading, -1 when not
+
     private final Texture legsTexture;
     private final Animation<TextureRegion> walk;
     private final Animation<TextureRegion> walkBackward;
@@ -92,6 +99,16 @@ public class PlayerRenderer {
                     splitStrip(torsoRifleFireTexture, RIFLE_FRAME_WIDTH));
         }
 
+        // reload strips, stretched over the whole reload, skipped if not drawn yet
+        if (Gdx.files.internal("sprites/oconnor_torso_gun_reload.png").exists()) {
+            torsoPistolReloadTexture = new Texture("sprites/oconnor_torso_gun_reload.png");
+            torsoPistolReload = splitStrip(torsoPistolReloadTexture, PISTOL_FRAME_WIDTH);
+        }
+        if (Gdx.files.internal("sprites/oconnor_torso_rifle_reload.png").exists()) {
+            torsoRifleReloadTexture = new Texture("sprites/oconnor_torso_rifle_reload.png");
+            torsoRifleReload = splitStrip(torsoRifleReloadTexture, RIFLE_FRAME_WIDTH);
+        }
+
         // Legs strip: frames side by side, each frame is a square as tall as the image
         legsTexture = new Texture("sprites/oconnor_legs.png");
         int frameSize = legsTexture.getHeight();
@@ -138,6 +155,11 @@ public class PlayerRenderer {
         fireTime = 0;
     }
 
+    // 0 to 1 while reloading, -1 when not, the anim follows the real reload time
+    public void setReloadProgress(float reloadProgress) {
+        this.reloadProgress = reloadProgress;
+    }
+
     // true = draws him holding the pistol
     public void setHoldingPistol(boolean holdingPistol) {
         this.holdingPistol = holdingPistol;
@@ -180,6 +202,13 @@ public class PlayerRenderer {
             else torso = fireAnim.getKeyFrame(fireTime);
         }
 
+        // reload anim of the weapon in hand, frame picked from how far the reload is
+        TextureRegion[] reloadFrames = holdingRifle ? torsoRifleReload : holdingPistol ? torsoPistolReload : null;
+        if (reloadProgress >= 0 && reloadFrames != null) {
+            int i = Math.min(reloadFrames.length - 1, (int) (reloadProgress * reloadFrames.length));
+            torso = reloadFrames[i];
+        }
+
         if (moving) drawCentered(batch, legs, x, y, angle); // legs hidden when standing, torso covers them
         drawCentered(batch, torso, x, y, torsoAngle);
     }
@@ -199,6 +228,8 @@ public class PlayerRenderer {
         torsoRifleTexture.dispose();
         if (torsoPistolFireTexture != null) torsoPistolFireTexture.dispose();
         if (torsoRifleFireTexture != null) torsoRifleFireTexture.dispose();
+        if (torsoPistolReloadTexture != null) torsoPistolReloadTexture.dispose();
+        if (torsoRifleReloadTexture != null) torsoRifleReloadTexture.dispose();
         legsTexture.dispose();
     }
 }
