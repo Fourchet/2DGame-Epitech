@@ -70,13 +70,13 @@ public class PlayerRenderer {
 
         // holding the pistol, arms locked forward so it just breathes
         torsoPistolTexture = new Texture("sprites/oconnor_torso_gun.png");
-        TextureRegion[] pistolFrames = TextureRegion.split(torsoPistolTexture, PISTOL_FRAME_WIDTH, torsoPistolTexture.getHeight())[0];
+        TextureRegion[] pistolFrames = splitStrip(torsoPistolTexture, PISTOL_FRAME_WIDTH);
         torsoPistol = new Animation<>(IDLE_FRAME_DURATION, pistolFrames);
         torsoPistol.setPlayMode(Animation.PlayMode.LOOP_PINGPONG);
 
         // holding the rifle, bigger canvas so it gets its own frame width
         torsoRifleTexture = new Texture("sprites/oconnor_torso_rifle.png");
-        TextureRegion[] rifleFrames = TextureRegion.split(torsoRifleTexture, RIFLE_FRAME_WIDTH, torsoRifleTexture.getHeight())[0];
+        TextureRegion[] rifleFrames = splitStrip(torsoRifleTexture, RIFLE_FRAME_WIDTH);
         torsoRifle = new Animation<>(IDLE_FRAME_DURATION, rifleFrames);
         torsoRifle.setPlayMode(Animation.PlayMode.LOOP_PINGPONG);
 
@@ -84,12 +84,12 @@ public class PlayerRenderer {
         if (Gdx.files.internal("sprites/oconnor_torso_gun_fire.png").exists()) {
             torsoPistolFireTexture = new Texture("sprites/oconnor_torso_gun_fire.png");
             torsoPistolFire = new Animation<>(FIRE_FRAME_DURATION,
-                    TextureRegion.split(torsoPistolFireTexture, PISTOL_FRAME_WIDTH, torsoPistolFireTexture.getHeight())[0]);
+                    splitStrip(torsoPistolFireTexture, PISTOL_FRAME_WIDTH));
         }
         if (Gdx.files.internal("sprites/oconnor_torso_rifle_fire.png").exists()) {
             torsoRifleFireTexture = new Texture("sprites/oconnor_torso_rifle_fire.png");
             torsoRifleFire = new Animation<>(FIRE_FRAME_DURATION,
-                    TextureRegion.split(torsoRifleFireTexture, RIFLE_FRAME_WIDTH, torsoRifleFireTexture.getHeight())[0]);
+                    splitStrip(torsoRifleFireTexture, RIFLE_FRAME_WIDTH));
         }
 
         // Legs strip: frames side by side, each frame is a square as tall as the image
@@ -100,6 +100,12 @@ public class PlayerRenderer {
         walk.setPlayMode(Animation.PlayMode.LOOP);
         walkBackward = new Animation<>(FRAME_DURATION, frames);
         walkBackward.setPlayMode(Animation.PlayMode.LOOP_REVERSED);
+    }
+
+    // cuts a strip into frames, if the image is narrower than one frame it becomes a single frame instead of crashing
+    private static TextureRegion[] splitStrip(Texture texture, int frameWidth) {
+        int w = Math.min(frameWidth, texture.getWidth());
+        return TextureRegion.split(texture, w, texture.getHeight())[0];
     }
 
     public void update(float delta, float x, float y) {
