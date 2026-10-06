@@ -100,6 +100,9 @@ public class GameScreen extends ScreenAdapter {
         mapManager.loadMap(target);
         world = mapManager.getWorld();
         zombieRenderers.clear(); // old zombies died with the old world
+        // old enemies and bullets died with the old world too, start with empty managers
+        factory = new EnemiesManager();
+        bullet_factory = new BulletManager();
         player = playerSpawner.spawnPlayer(spawn, world, mapManager, weaponController.getCurrentWeapon(), cameraController);
     }
 

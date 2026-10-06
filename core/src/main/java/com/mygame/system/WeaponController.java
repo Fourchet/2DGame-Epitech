@@ -46,8 +46,12 @@ public class WeaponController {
 
         // reload sound when a reload starts
         boolean reloading = currentWeapon.getIsReloading();
-        if (reloading && !wasReloading) sounds.playReload();
+        if (reloading && !wasReloading) sounds.playReload(currentWeapon == rifle); // each gun has its own reload
         wasReloading = reloading;
+
+        // reload anim follows the real reload timer
+        float progress = 1f - currentWeapon.getReloadTimer() / currentWeapon.getReloadTime();
+        playerRenderer.setReloadProgress(reloading ? Math.max(0f, progress) : -1f);
     }
 
     public Weapon getPistol() {
