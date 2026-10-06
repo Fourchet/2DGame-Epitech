@@ -8,7 +8,7 @@ import com.mygame.entities.Bullet;
 import com.mygame.items.Weapon;
 import com.mygame.system.BulletOwner;
 
-public class BulletFactory {
+public class BulletManager {
   private final Array<Bullet> bulletsArray = new Array<Bullet>();
 
   public void generateBullet(World world,float x,float y, Vector2 direction,float speed,float damage, BulletOwner owner, Weapon weapon){

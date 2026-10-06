@@ -3,7 +3,7 @@ package com.mygame.entities;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
-import com.mygame.factory.BulletFactory;
+import com.mygame.factory.BulletManager;
 import com.mygame.items.Weapon;
 import com.mygame.system.BulletOwner;
 
@@ -16,18 +16,18 @@ public class Military extends Enemy {
   private static final float cooldown = 2f;
 
   private final Vector2 direction = new Vector2();
-  private final BulletFactory bulletFactory;
+  private final BulletManager bulletManager;
   private final Vector2 shootDirection = new Vector2();
 
   private World world;
   private Weapon weapon;
   private float attackTimer = 0f;
 
-  public Military(World world, float x, float y, Weapon weapon, BulletFactory bulletFactory) {
+  public Military(World world, float x, float y, Weapon weapon, BulletManager bulletManager) {
     super(world, x, y,150, 12 );
     this.weapon  = weapon;
     this.world = world;
-    this.bulletFactory = bulletFactory;
+    this.bulletManager = bulletManager;
   }
 
   @Override
@@ -141,7 +141,7 @@ public class Military extends Enemy {
     float spawnX = shooterX + shootDirection.x * bulletSpawnOffset;
     float spawnY = shooterY + shootDirection.y * bulletSpawnOffset;
 
-    bulletFactory.generateBullet(world,spawnX,spawnY,shootDirection,weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.ENEMY, this.weapon);
+    bulletManager.generateBullet(world,spawnX,spawnY,shootDirection,weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.ENEMY, this.weapon);
   }
 
   public void recoverHealth(){}

@@ -9,7 +9,7 @@ import com.mygame.entities.Player;
 import com.mygame.entities.Zombie;
 import com.mygame.items.Weapon;
 
-public class EnemiesFactory {
+public class EnemiesManager {
 
     private final Array<Enemy> enemies = new Array<>();
     // spawn enemies 
@@ -22,7 +22,7 @@ public class EnemiesFactory {
         return zombie;
     }
 
-    public Military spawnMilitary(World world, float x, float y, Weapon weapon, BulletFactory bulletFactory){
+    public Military spawnMilitary(World world, float x, float y, Weapon weapon, BulletManager bulletFactory){
         Military military = new Military(world, x, y, weapon, bulletFactory);
         enemies.add(military);
         return military;

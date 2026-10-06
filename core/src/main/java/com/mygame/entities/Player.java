@@ -9,7 +9,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
-import com.mygame.factory.BulletFactory;
+import com.mygame.factory.BulletManager;
 import com.mygame.items.Weapon;
 import com.mygame.system.BulletOwner;
 
@@ -58,7 +58,7 @@ public class Player {
         body.setUserData(this);
     }
 
-    public void update(Vector2 mousePosition, World world,BulletFactory bulletFactory, float delta) {
+    public void update(Vector2 mousePosition, World world,BulletManager bulletManager, float delta) {
         if (weapon != null){
             weapon.update(delta);
         }
@@ -83,7 +83,7 @@ public class Player {
 
         // shoot
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            this.shoot(mousePosition, this.weapon, bulletFactory, world);
+            this.shoot(mousePosition, this.weapon, bulletManager, world);
             System.out.println("Left is pressed");
         }
 
@@ -99,7 +99,7 @@ public class Player {
     }
 
 
-    public void shoot(Vector2 target,Weapon weapon,BulletFactory bulletFactory, World world) {
+    public void shoot(Vector2 target,Weapon weapon,BulletManager bulletManager, World world) {
         if (weapon == null ){
             return;
         }
@@ -118,7 +118,7 @@ public class Player {
         float spawnX = playerX + shootDirection.x * bulletSpawnOffset;
         float spawnY = playerY + shootDirection.y * bulletSpawnOffset;
 
-        bulletFactory.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);
+        bulletManager.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);
     }  
 
     public void TakeDamage(int damageSustained){
