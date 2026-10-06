@@ -86,7 +86,26 @@ public abstract class Enemy {
     return health;
   }
 
+  public void setDamage(int damage) {
+    this.damage = damage;
+  }
+
+  public void setHealth(int health) {
+    this.health = health;
+  }
+
+
+  public void takeDamage(int damageSustained){
+    this.health -= damageSustained;
+
+    if (this.health < 0){
+      this.health = 0;
+    }
+    System.out.println(getClass().getName() + " has " + health);
+  }
+  
   // abstract methods
   public abstract void update(Player player, float delta);
+  public abstract void recoverHealth();
   public abstract void attack(Player player);
 }

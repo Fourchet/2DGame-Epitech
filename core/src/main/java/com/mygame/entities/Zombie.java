@@ -11,7 +11,7 @@ public class Zombie extends Enemy {
 
   private final Vector2 direction = new Vector2();
   
-  private static final float ATTACK_COOLDOWN = 2f;
+  private static final float cooldown = 2f;
   private boolean touchingPlayer = false;
   private float attackTimer = 0f;
 
@@ -47,7 +47,7 @@ public class Zombie extends Enemy {
 
           attackTimer += delta;
 
-          if (attackTimer >= ATTACK_COOLDOWN) {
+          if (attackTimer >= cooldown) {
               attack(player);
               attackTimer = 0f;
 
@@ -62,7 +62,7 @@ public class Zombie extends Enemy {
   @Override 
   public void attack(Player player){
     System.out.println("Zombie attack "+ player);
-    player.TakeDamage(this.damage);
+    player.takeDamage(this.damage);
   }
 
 
@@ -70,12 +70,7 @@ public class Zombie extends Enemy {
     this.touchingPlayer = touchingPlayer;
   }
 
-  public void TakeDamage(int damageSustained){
-    this.health -= damageSustained;
+  public void recoverHealth(){
 
-    if (this.health < 0){
-      this.health = 0;
-      System.out.println("Zombie's dead");
-    }
   }
 }
