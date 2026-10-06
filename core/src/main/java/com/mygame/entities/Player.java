@@ -18,7 +18,7 @@ public class Player {
     private static final float SPEED = 120f;
     private static final float SIZE = 16f;
 
-    private int health = 250;
+    private float health = 250f;
     private final Body body;
     private final Vector2 direction = new Vector2();
     private Weapon weapon;
@@ -121,7 +121,7 @@ public class Player {
         bulletManager.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);
     }  
 
-    public void takeDamage(int damageSustained){
+    public void takeDamage(float damageSustained){
         this.health -= damageSustained;
         System.out.println(this + "is taking damage, he has now " + health +"hp");
         if (this.health < 0){
@@ -139,7 +139,7 @@ public class Player {
         return body.getPosition();
     }
 
-    public int getHealth() {
+    public float getHealth() {
       return health;
     }
 

@@ -16,7 +16,7 @@ public class Zombie extends Enemy {
   private float attackTimer = 0f;
 
   public Zombie(World world, float x, float y) {
-    super(world, x, y,100, 12 );
+    super(world, x, y,100f, 12f );
   }
 
   @Override
