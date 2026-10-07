@@ -16,6 +16,7 @@ public class SoundManager {
     private final Sound reloadRifle;
     private final Sound dryFire;
     private final Sound headPop;
+    private final Sound enemyShot; // soldiers' mp5
     private final Array<Sound> groans = new Array<>(); // picked at random so it doesn't loop the same one
 
     public SoundManager() {
@@ -25,6 +26,7 @@ public class SoundManager {
         reloadRifle = load("sounds/reload_ak.wav");
         dryFire = load("sounds/dry_fire.wav");
         headPop = load("sounds/zombie_head_pop.wav");
+        enemyShot = load("sounds/mp5sd.wav");
         for (int i = 1; i <= 3; i++) {
             Sound groan = load("sounds/zombie_groan" + i + ".wav");
             if (groan != null) groans.add(groan);
@@ -81,6 +83,16 @@ public class SoundManager {
         float volume = 0.8f * (1f - distance / HEARING_DISTANCE);
         float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files
         headPop.play(volume, MathUtils.random(0.95f, 1.05f), pan);
+    }
+
+    // soldier firing, louder when close, from his side
+    public void playEnemyShot(float dx, float dy) {
+        if (enemyShot == null) return;
+        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+        if (distance > HEARING_DISTANCE) return;
+        float volume = 0.6f * (1f - distance / HEARING_DISTANCE);
+        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files
+        enemyShot.play(volume, MathUtils.random(0.92f, 1.08f), pan); // small pitch change so bursts aren't robotic
     }
 
     public void dispose() {

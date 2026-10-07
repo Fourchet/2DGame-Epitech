@@ -79,13 +79,14 @@ public class GameScreen extends ScreenAdapter {
         gameRenderer = new GameRenderer(batch, playerRenderer, zombieWalk, bodies, zombieRenderers, bulletSprite, shapes, sounds);
 
         // spawns enemies
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f);
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
-        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory);
+        //factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f); //default zombie spawn
+
+
+        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+
+        
         playerRenderer.setHoldingRifle(weaponController.getCurrentWeapon() == weaponController.getRifle());
         playerRenderer.setHoldingPistol(weaponController.getCurrentWeapon() == weaponController.getPistol());
         weaponController.setLastAmmo(weaponController.getCurrentWeapon().getActualBullets());

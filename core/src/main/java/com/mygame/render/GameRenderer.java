@@ -25,6 +25,10 @@ import com.mygame.system.CameraController;
 import com.mygame.world.MapManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.mygame.entities.BloodEffects;
+import com.mygame.entities.Military;
+import com.mygame.entities.MilitaryRenderer;
+import com.mygame.system.BulletOwner;
+import com.badlogic.gdx.utils.ObjectSet;
 
 public class GameRenderer {
     private SpriteBatch batch;
@@ -40,6 +44,13 @@ public class GameRenderer {
     private final Texture zombieDeath2Texture = new Texture("sprites/zombie_death2.png");
     private final Animation<TextureRegion> zombieDeath2 = ZombieRenderer.loadDeath(zombieDeath2Texture, ZombieRenderer.DEATH2_FRAMES);
     private final BloodEffects blood = new BloodEffects();
+    private final Texture militaryLegsTexture = new Texture("sprites/military_legs.png");
+    private final Texture militaryTorsoTexture = new Texture("sprites/military_torso.png");
+    private final Animation<TextureRegion> militaryLegs = MilitaryRenderer.loadLegs(militaryLegsTexture);
+    private final TextureRegion militaryTorso = MilitaryRenderer.loadTorso(militaryTorsoTexture);
+    private final ObjectMap<Military, MilitaryRenderer> militaryRenderers = new ObjectMap<>(); // one renderer per soldier
+    private ObjectSet<Bullet> seenBullets = new ObjectSet<>(); // bullets already on screen last frame
+    private ObjectSet<Bullet> currentBullets = new ObjectSet<>();
 
     public GameRenderer(SpriteBatch batch, PlayerRenderer playerRenderer, Animation<TextureRegion> zombieWalk, Array<Body> bodies, ObjectMap<Zombie, ZombieRenderer> zombieRenderers, TextureRegion bulletSprite, ShapeRenderer shapes, SoundManager sounds) {
         this.batch = batch;
@@ -101,14 +112,33 @@ public class GameRenderer {
             r.draw(batch);
         }
         for (ZombieRenderer r : zombieRenderers.values()) if (!r.isDead()) r.draw(batch);
+        // soldiers, each with its own renderer
+        for (Body body : bodies) {
+            if (!(body.getUserData() instanceof Military)) continue;
+            Military m = (Military) body.getUserData();
+            MilitaryRenderer r = militaryRenderers.get(m);
+            if (r == null) {
+                r = new MilitaryRenderer(militaryLegs, militaryTorso, blood);
+                militaryRenderers.put(m, r);
+            }
+            r.update(delta, m.getPosition().x * Physics.PPM, m.getPosition().y * Physics.PPM, px, py, m.getHealth());
+            r.draw(batch);
+        }
         // blood on top
         blood.update(delta);
         blood.draw(batch);
         playerRenderer.draw(batch, px, py);
 
         // bullets with the sprite, turned toward where they fly
+        currentBullets.clear();
         for (Body body : bodies) {
             if (!(body.getUserData() instanceof Bullet)) continue;
+            Bullet bullet = (Bullet) body.getUserData();
+            currentBullets.add(bullet);
+            // new enemy bullet = a soldier just fired, mp5 sound from where it left
+            if (!seenBullets.contains(bullet) && bullet.getOwner() == BulletOwner.ENEMY) {
+                sounds.playEnemyShot(body.getPosition().x * Physics.PPM - px, body.getPosition().y * Physics.PPM - py);
+            }
             float bx = body.getPosition().x * Physics.PPM;
             float by = body.getPosition().y * Physics.PPM;
             float angle = body.getLinearVelocity().angleDeg();
@@ -117,6 +147,10 @@ public class GameRenderer {
             batch.draw(bulletSprite, bx - w / 2f, by - h / 2f, w / 2f, h / 2f, w, h, 1f, 1f, angle);
         }
         batch.end();
+        // swap so next frame knows which bullets are new
+        ObjectSet<Bullet> swap = seenBullets;
+        seenBullets = currentBullets;
+        currentBullets = swap;
         
 
         shapes.setProjectionMatrix(camera.combined);
@@ -124,7 +158,7 @@ public class GameRenderer {
         // enemies without a sprite yet (military) as white squares
         for (Body body : bodies) {
             Object data = body.getUserData();
-            if (data instanceof Enemy && !(data instanceof Zombie)) ((Enemy) data).draw(shapes);
+            if (data instanceof Enemy && !(data instanceof Zombie) && !(data instanceof Military)) ((Enemy) data).draw(shapes);
         }
         shapes.end();
 
@@ -133,11 +167,15 @@ public class GameRenderer {
     // sprays from the old map, call on map change
     public void clearEffects() {
         blood.clear();
+        militaryRenderers.clear(); // soldiers from the old map
+        seenBullets.clear();
     }
 
     public void dispose() {
         zombieDeathTexture.dispose();
         zombieDeath2Texture.dispose();
+        militaryLegsTexture.dispose();
+        militaryTorsoTexture.dispose();
         blood.dispose();
     }
 }

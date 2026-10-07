@@ -1,5 +1,6 @@
 package com.mygame.entities;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
@@ -10,9 +11,9 @@ import com.mygame.system.BulletOwner;
 public class Military extends Enemy {
   
   private static final float speed = 70f;
-  private static final float STOP_DISTANCE = 12f;
+  private final float stopDistance = MathUtils.random(10f, 20f); // each soldier stops at his own distance
   private static final float melee_range = 18f;
-  private static final float shoot_range = 180f;
+  private final float shootRange = MathUtils.random(150f, 210f); // each soldier opens fire from his own distance
   private static final float cooldown = 2f;
 
   private final Vector2 direction = new Vector2();
@@ -24,7 +25,7 @@ public class Military extends Enemy {
   private float attackTimer = 0f;
 
   public Military(World world, float x, float y, Weapon weapon, BulletManager bulletManager) {
-    super(world, x, y,150f, 12f );
+    super(world, x, y,50f, 12f ); // adjust health here
     this.weapon  = weapon;
     this.world = world;
     this.bulletManager = bulletManager;
@@ -45,7 +46,7 @@ public class Military extends Enemy {
 
     float distance = direction.len() * Physics.PPM;
 
-    if (distance > STOP_DISTANCE) {
+    if (distance > stopDistance) {
 
       direction.nor();
 
@@ -59,7 +60,7 @@ public class Military extends Enemy {
     }
 
     if (weapon != null) {
-      if (distance > shoot_range) {
+      if (distance > shootRange) {
         direction.nor();
           body.setLinearVelocity(
             direction.x * speed / Physics.PPM,
