@@ -15,6 +15,7 @@ public class SoundManager {
     private final Sound reloadPistol;
     private final Sound reloadRifle;
     private final Sound dryFire;
+    private final Sound headPop;
     private final Array<Sound> groans = new Array<>(); // picked at random so it doesn't loop the same one
 
     public SoundManager() {
@@ -23,6 +24,7 @@ public class SoundManager {
         reloadPistol = load("sounds/reload_pistol.wav");
         reloadRifle = load("sounds/reload_ak.wav");
         dryFire = load("sounds/dry_fire.wav");
+        headPop = load("sounds/zombie_head_pop.wav");
         for (int i = 1; i <= 3; i++) {
             Sound groan = load("sounds/zombie_groan" + i + ".wav");
             if (groan != null) groans.add(groan);
@@ -69,6 +71,16 @@ public class SoundManager {
         float volume = 0.6f * (1f - distance / HEARING_DISTANCE);
         float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files
         groans.random().play(volume, MathUtils.random(0.85f, 1.05f), pan);
+    }
+
+    // rare death, same as the groans: louder when close, from his side
+    public void playHeadPop(float dx, float dy) {
+        if (headPop == null) return;
+        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+        if (distance > HEARING_DISTANCE) return;
+        float volume = 0.8f * (1f - distance / HEARING_DISTANCE);
+        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files
+        headPop.play(volume, MathUtils.random(0.95f, 1.05f), pan);
     }
 
     public void dispose() {

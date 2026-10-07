@@ -23,6 +23,8 @@ import com.mygame.entities.Zombie;
 import com.mygame.entities.ZombieRenderer;
 import com.mygame.system.CameraController;
 import com.mygame.world.MapManager;
+import com.badlogic.gdx.graphics.Texture;
+import com.mygame.entities.BloodEffects;
 
 public class GameRenderer {
     private SpriteBatch batch;
@@ -33,6 +35,11 @@ public class GameRenderer {
     private TextureRegion bulletSprite;
     private ShapeRenderer shapes;
     private SoundManager sounds;
+    private final Texture zombieDeathTexture = new Texture("sprites/zombie_death.png");
+    private final Animation<TextureRegion> zombieDeath = ZombieRenderer.loadDeath(zombieDeathTexture, ZombieRenderer.DEATH_FRAMES);
+    private final Texture zombieDeath2Texture = new Texture("sprites/zombie_death2.png");
+    private final Animation<TextureRegion> zombieDeath2 = ZombieRenderer.loadDeath(zombieDeath2Texture, ZombieRenderer.DEATH2_FRAMES);
+    private final BloodEffects blood = new BloodEffects();
 
     public GameRenderer(SpriteBatch batch, PlayerRenderer playerRenderer, Animation<TextureRegion> zombieWalk, Array<Body> bodies, ObjectMap<Zombie, ZombieRenderer> zombieRenderers, TextureRegion bulletSprite, ShapeRenderer shapes, SoundManager sounds) {
         this.batch = batch;
@@ -71,25 +78,32 @@ public class GameRenderer {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        // draws every zombie in the world, each with its own renderer
+        // update every zombie still in the world
         world.getBodies(bodies);
         for (Body body : bodies) {
             if (!(body.getUserData() instanceof Zombie)) continue;
             Zombie z = (Zombie) body.getUserData();
             ZombieRenderer r = zombieRenderers.get(z);
             if (r == null) {
-                r = new ZombieRenderer(zombieWalk);
+                r = new ZombieRenderer(zombieWalk, zombieDeath, zombieDeath2, blood);
                 zombieRenderers.put(z, r);
             }
             float zx = z.getPosition().x * Physics.PPM;
             float zy = z.getPosition().y * Physics.PPM;
-            // if the enemy is dead, we don't update the player pos
-            if (!z.isDead()) {
-              r.update(delta, zx, zy, px, py);
-            }
-            if (MathUtils.random() < delta * 0.15f) sounds.playGroan(zx - px, zy - py); // a groan every ~7 s per zombie
-            r.draw(batch, zx, zy);
+            // always updated, it's how the renderer sees the hits and the death (corpse stays where he fell)
+            r.update(delta, zx, zy, px, py, z.getHealth());
+            if (!r.isDead() && MathUtils.random() < delta * 0.15f) sounds.playGroan(zx - px, zy - py); // a groan every ~7 s per zombie, corpses stay quiet
         }
+        // corpses first so the living walk over them, they stay even once the body is gone
+        for (ZombieRenderer r : zombieRenderers.values()) {
+            if (!r.isDead()) continue;
+            if (r.headPopNow()) sounds.playHeadPop(r.getX() - px, r.getY() - py); // 1 s after the rare death
+            r.draw(batch);
+        }
+        for (ZombieRenderer r : zombieRenderers.values()) if (!r.isDead()) r.draw(batch);
+        // blood on top
+        blood.update(delta);
+        blood.draw(batch);
         playerRenderer.draw(batch, px, py);
 
         // bullets with the sprite, turned toward where they fly
@@ -114,5 +128,16 @@ public class GameRenderer {
         }
         shapes.end();
 
+    }
+
+    // sprays from the old map, call on map change
+    public void clearEffects() {
+        blood.clear();
+    }
+
+    public void dispose() {
+        zombieDeathTexture.dispose();
+        zombieDeath2Texture.dispose();
+        blood.dispose();
     }
 }

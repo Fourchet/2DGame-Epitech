@@ -81,7 +81,11 @@ public class GameScreen extends ScreenAdapter {
         // spawns enemies
         factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f);
         factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
-        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f - 100, mapManager.getMapHeight() / 2f);
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory);
         playerRenderer.setHoldingRifle(weaponController.getCurrentWeapon() == weaponController.getRifle());
         playerRenderer.setHoldingPistol(weaponController.getCurrentWeapon() == weaponController.getPistol());
         weaponController.setLastAmmo(weaponController.getCurrentWeapon().getActualBullets());
