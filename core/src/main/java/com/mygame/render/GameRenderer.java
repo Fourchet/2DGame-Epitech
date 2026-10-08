@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -48,7 +49,15 @@ public class GameRenderer {
     private final Texture militaryTorsoTexture = new Texture("sprites/military_torso.png");
     private final Animation<TextureRegion> militaryLegs = MilitaryRenderer.loadLegs(militaryLegsTexture);
     private final TextureRegion militaryTorso = MilitaryRenderer.loadTorso(militaryTorsoTexture);
+    private final Texture militaryIdleTexture = new Texture("sprites/military_torso_idle.png");
+    private final Animation<TextureRegion> militaryIdle = MilitaryRenderer.loadTorsoIdle(militaryIdleTexture);
+    private final Texture militaryDeathTexture = new Texture("sprites/military_death.png");
+    private final Animation<TextureRegion> militaryDeath = MilitaryRenderer.loadDeath(militaryDeathTexture);
     private final ObjectMap<Military, MilitaryRenderer> militaryRenderers = new ObjectMap<>(); // one renderer per soldier
+    private final Array<Vector3> newShots = new Array<>(); // x, y, angle of this frame's shots, the LightManager flashes there
+    private static final float PLAYER_MUZZLE_OFFSET = 36f; // px from where bullets spawn to the end of the barrel, measured on oconnor_torso_rifle_fire
+    private static final float PLAYER_MUZZLE_SIDE = -3f; // px, the rifle sits a bit to his right
+    private static final float ENEMY_MUZZLE_OFFSET = 27.5f; // soldiers, 0 if bullets already spawn at the barrel
     private ObjectSet<Bullet> seenBullets = new ObjectSet<>(); // bullets already on screen last frame
     private ObjectSet<Bullet> currentBullets = new ObjectSet<>();
 
@@ -118,10 +127,16 @@ public class GameRenderer {
             Military m = (Military) body.getUserData();
             MilitaryRenderer r = militaryRenderers.get(m);
             if (r == null) {
-                r = new MilitaryRenderer(militaryLegs, militaryTorso, blood);
+                r = new MilitaryRenderer(militaryLegs, militaryTorso, militaryIdle, militaryDeath, blood);
                 militaryRenderers.put(m, r);
             }
             r.update(delta, m.getPosition().x * Physics.PPM, m.getPosition().y * Physics.PPM, px, py, m.getHealth());
+            if (!r.isDead()) r.draw(batch);
+        }
+        // soldier corpses, they stay even once the body is gone
+        for (MilitaryRenderer r : militaryRenderers.values()) {
+            if (!r.isDead()) continue;
+            if (r.deathSoundNow()) sounds.playHelmetHeadshot(r.getX() - px, r.getY() - py); // the frame he dies
             r.draw(batch);
         }
         // blood on top
@@ -131,10 +146,24 @@ public class GameRenderer {
 
         // bullets with the sprite, turned toward where they fly
         currentBullets.clear();
+        newShots.clear();
         for (Body body : bodies) {
             if (!(body.getUserData() instanceof Bullet)) continue;
             Bullet bullet = (Bullet) body.getUserData();
             currentBullets.add(bullet);
+            // new bullet = someone just fired, remember where the barrel was for the light
+            if (!seenBullets.contains(bullet)) {
+                Vector2 vel = body.getLinearVelocity();
+                float a = vel.angleDeg();
+                float step = Math.min(delta, 1f / 30f); // it already flew one physics step, go back to where it spawned
+                boolean enemy = bullet.getOwner() == BulletOwner.ENEMY;
+                float forward = enemy ? ENEMY_MUZZLE_OFFSET : PLAYER_MUZZLE_OFFSET;
+                float side = enemy ? 0f : PLAYER_MUZZLE_SIDE;
+                // forward along the shot, side = sideways from it
+                float mx = (body.getPosition().x - vel.x * step) * Physics.PPM + MathUtils.cosDeg(a) * forward - MathUtils.sinDeg(a) * side;
+                float my = (body.getPosition().y - vel.y * step) * Physics.PPM + MathUtils.sinDeg(a) * forward + MathUtils.cosDeg(a) * side;
+                newShots.add(new Vector3(mx, my, a));
+            }
             // new enemy bullet = a soldier just fired, mp5 sound from where it left
             if (!seenBullets.contains(bullet) && bullet.getOwner() == BulletOwner.ENEMY) {
                 sounds.playEnemyShot(body.getPosition().x * Physics.PPM - px, body.getPosition().y * Physics.PPM - py);
@@ -169,6 +198,12 @@ public class GameRenderer {
         blood.clear();
         militaryRenderers.clear(); // soldiers from the old map
         seenBullets.clear();
+        newShots.clear();
+    }
+
+    // where shots happened this frame, for the LightManager
+    public Array<Vector3> getNewShots() {
+        return newShots;
     }
 
     public void dispose() {
@@ -176,6 +211,8 @@ public class GameRenderer {
         zombieDeath2Texture.dispose();
         militaryLegsTexture.dispose();
         militaryTorsoTexture.dispose();
+        militaryIdleTexture.dispose();
+        militaryDeathTexture.dispose();
         blood.dispose();
     }
 }

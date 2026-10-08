@@ -13,6 +13,9 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "cars.tsx": {
+            "dynamicWrapping": false
+        },
         "flooring.tsx": {
             "dynamicWrapping": true,
             "scaleInDock": 1
@@ -28,39 +31,45 @@
         },
         "house.tmx": {
             "expandedObjectLayers": [
+                6,
                 7,
-                6
+                9
             ],
-            "scale": 1,
-            "selectedLayer": 3,
+            "scale": 5.5,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 489,
-                "y": 503.5
+                "x": 155.27272727272728,
+                "y": 340.6363636363636
             }
         },
         "house_interior.tmx": {
             "expandedObjectLayers": [
-                2,
-                3
+                9,
+                3,
+                2
             ],
-            "scale": 1.5,
-            "selectedLayer": 4,
+            "scale": 2,
+            "selectedLayer": 7,
             "viewCenter": {
-                "x": 579.3333333333333,
-                "y": 457.66666666666663
+                "x": 732,
+                "y": 523.75
             }
         },
         "map.tmx": {
             "expandedObjectLayers": [
+                6,
                 3,
                 5
             ],
             "scale": 1,
-            "selectedLayer": 2,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 576,
-                "y": 432.5
+                "x": 546,
+                "y": 280.5
             }
+        },
+        "realcars.tsx": {
+            "dynamicWrapping": false
         },
         "test.xml": {
             "scaleInDock": 1,
@@ -94,10 +103,18 @@
         "walls.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "warehouse.tmx": {
+            "scale": 1,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 1219,
+                "y": 1003.5
+            }
         }
     },
     "last.externalTilesetPath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets",
-    "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/32x32",
+    "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets",
     "map.height": 70,
     "map.lastUsedFormat": "tmx",
     "map.width": 100,
@@ -113,6 +130,7 @@
         "flowers.tsx"
     ],
     "project": "map.tmx.tiled-project",
+    "property.type": "color",
     "recentFiles": [
         "hospital.tsx",
         "flowers.tsx",
@@ -129,5 +147,5 @@
     ],
     "tileset.lastUsedFilter": "All Files (*)",
     "tileset.lastUsedFormat": "tsx",
-    "tileset.type": 1
+    "tileset.type": 0
 }

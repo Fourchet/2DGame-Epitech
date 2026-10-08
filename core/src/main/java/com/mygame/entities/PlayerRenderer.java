@@ -13,7 +13,8 @@ public class PlayerRenderer {
     private static final float IDLE_FRAME_DURATION = 0.8f; // seconds per breathing frame, higher = slower breathing
     private static final float SCALE = 0.7f; // character size, 1 = original size
     private static final int PISTOL_FRAME_WIDTH = 100; // pistol frames are 100x50
-    private static final int RIFLE_FRAME_WIDTH = 120; // rifle frames are 120x70, not squares
+    private static final int RIFLE_FRAME_WIDTH = 150; // rifle holding and firing frames are 150x70, not squares
+    private static final int RIFLE_RELOAD_FRAME_WIDTH = 120; // reload strip still 120x70, change it if you redraw it wider
     private static final float FIRE_FRAME_DURATION = 0.05f; // firing anim is quick, has to end before the next shot
 
     private final Texture torsoTexture;
@@ -106,7 +107,7 @@ public class PlayerRenderer {
         }
         if (Gdx.files.internal("sprites/oconnor_torso_rifle_reload.png").exists()) {
             torsoRifleReloadTexture = new Texture("sprites/oconnor_torso_rifle_reload.png");
-            torsoRifleReload = splitStrip(torsoRifleReloadTexture, RIFLE_FRAME_WIDTH);
+            torsoRifleReload = splitStrip(torsoRifleReloadTexture, RIFLE_RELOAD_FRAME_WIDTH);
         }
 
         // Legs strip: frames side by side, each frame is a square as tall as the image

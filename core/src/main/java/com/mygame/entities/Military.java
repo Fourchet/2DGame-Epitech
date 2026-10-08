@@ -13,8 +13,8 @@ public class Military extends Enemy {
   private static final float speed = 70f;
   private final float stopDistance = MathUtils.random(10f, 20f); // each soldier stops at his own distance
   private static final float melee_range = 18f;
-  private final float shootRange = MathUtils.random(150f, 210f); // each soldier opens fire from his own distance
-  private static final float cooldown = 2f;
+  private final float shootRange = MathUtils.random(200f, 300f); // each soldier opens fire from his own distance
+  private static final float cooldown = MathUtils.random(0.2f, 0.5f);
 
   private final Vector2 direction = new Vector2();
   private final BulletManager bulletManager;
@@ -130,8 +130,10 @@ public class Military extends Enemy {
     float shooterX = shooterPosition.x * Physics.PPM;
     float shooterY = shooterPosition.y * Physics.PPM;
 
-    float spawnX = shooterX + shootDirection.x * bulletSpawnOffset;
-    float spawnY = shooterY + shootDirection.y * bulletSpawnOffset;
+
+    float forward = 32f, side = -3.5f; //counter the fact that the gun isnt perfectly centered
+    float spawnX = shooterX + shootDirection.x * forward - shootDirection.y * side;
+    float spawnY = shooterY + shootDirection.y * forward + shootDirection.x * side;
 
     bulletManager.generateBullet(world,spawnX,spawnY,shootDirection,weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.ENEMY, this.weapon);
   }

@@ -25,6 +25,8 @@ import com.mygame.system.WeaponController;
 import com.mygame.world.MapManager;
 import com.mygame.world.PlayerSpawner;
 import com.mygame.render.GameRenderer;
+import com.mygame.render.PostProcess;
+import com.mygame.render.LightManager;
 
 
 
@@ -49,6 +51,8 @@ public class GameScreen extends ScreenAdapter {
     private WeaponController weaponController;
     private PlayerSpawner playerSpawner;
     private GameRenderer gameRenderer;
+    private PostProcess postProcess;
+    private LightManager lightManager;
 
     private final ShapeRenderer shapes = new ShapeRenderer();
     private EnemiesManager factory; // ennemy factory
@@ -70,6 +74,8 @@ public class GameScreen extends ScreenAdapter {
         bulletSprite = new TextureRegion(bulletTexture);
         mapManager.loadMap("map.tmx");
         world = mapManager.getWorld();
+        postProcess = new PostProcess();
+        lightManager = new LightManager(world, mapManager.getMap(), cameraController.getViewport()); // lamps and sun from the map's "lights" layer
         player = playerSpawner.spawnPlayer("start", world, mapManager, weaponController.getCurrentWeapon(), cameraController); // only one player, at the start spawn
         
         // spawns enemies and bullet in creating the managers
@@ -79,12 +85,12 @@ public class GameScreen extends ScreenAdapter {
         gameRenderer = new GameRenderer(batch, playerRenderer, zombieWalk, bodies, zombieRenderers, bulletSprite, shapes, sounds);
 
         // spawns enemies
-        //factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f); //default zombie spawn
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f); //default zombie spawn
 
 
         factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
-        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
-        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
 
         
         playerRenderer.setHoldingRifle(weaponController.getCurrentWeapon() == weaponController.getRifle());
@@ -104,6 +110,9 @@ public class GameScreen extends ScreenAdapter {
         String spawn = door.getProperties().get("spawn", String.class);
         mapManager.loadMap(target);
         world = mapManager.getWorld();
+        // lights belong to the old world too, new ones from the new map
+        lightManager.dispose();
+        lightManager = new LightManager(world, mapManager.getMap(), cameraController.getViewport());
         zombieRenderers.clear(); // old zombies died with the old world
         // old enemies and bullets died with the old world too, start with empty managers
         factory = new EnemiesManager();
@@ -129,7 +138,12 @@ public class GameScreen extends ScreenAdapter {
 
         cameraController.updateCamera(player, delta);
 
+        lightManager.update(delta, cameraController.getCamera()); // rays and light texture, before the filter
+        postProcess.begin(); // game draws into the filter's texture
         gameRenderer.render(delta, world, player, cameraController, mapManager);
+        lightManager.render(); // darkness and lights on top of the game
+        postProcess.end(delta); // then onto the screen with the cozy shader
+        lightManager.flash(gameRenderer.getNewShots()); // this frame's shots light up the room
 
     }
 
@@ -137,6 +151,8 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         cameraController.resize(width, height);
+        if (postProcess != null) postProcess.resize(); // filter texture follows the window size
+        if (lightManager != null) lightManager.resize(cameraController.getViewport()); // lights follow the black bars
     }
 
 
@@ -149,5 +165,7 @@ public class GameScreen extends ScreenAdapter {
         if (sounds != null) sounds.dispose();
         if (batch != null) batch.dispose();
         if (playerRenderer != null) playerRenderer.dispose();
+        if (postProcess != null) postProcess.dispose();
+        if (lightManager != null) lightManager.dispose();
     }    
 }
