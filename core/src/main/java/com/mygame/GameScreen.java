@@ -27,6 +27,8 @@ import com.mygame.world.PlayerSpawner;
 import com.mygame.render.GameRenderer;
 import com.mygame.render.PostProcess;
 import com.mygame.render.LightManager;
+import com.mygame.world.SleepEvent;
+import com.mygame.world.TravelCutscene;
 
 
 
@@ -53,6 +55,8 @@ public class GameScreen extends ScreenAdapter {
     private GameRenderer gameRenderer;
     private PostProcess postProcess;
     private LightManager lightManager;
+    private final SleepEvent sleepEvent = new SleepEvent(); // bed: press E to sleep till the light changes
+    private final TravelCutscene travel = new TravelCutscene(); // doors with a "cutscene" play it before you arrive
 
     private final ShapeRenderer shapes = new ShapeRenderer();
     private EnemiesManager factory; // ennemy factory
@@ -103,16 +107,25 @@ public class GameScreen extends ScreenAdapter {
         float px = player.getPosition().x * Physics.PPM;
         float py = player.getPosition().y * Physics.PPM;
 
+        if (travel.isBusy()) return; // already on the way
         MapObject door = MapEvents.findDoorAt(mapManager.getMap(), px, py);
         if (door == null) return;
 
-        String target = door.getProperties().get("target", String.class);
-        String spawn = door.getProperties().get("spawn", String.class);
+        // door with a cutscene: the map changes later, when the screen is black
+        if (door.getProperties().containsKey("cutscene")) {
+            travel.start(door);
+            return;
+        }
+        changeMap(door.getProperties().get("target", String.class), door.getProperties().get("spawn", String.class));
+    }
+
+    private void changeMap(String target, String spawn) {
         mapManager.loadMap(target);
         world = mapManager.getWorld();
         // lights belong to the old world too, new ones from the new map
         lightManager.dispose();
         lightManager = new LightManager(world, mapManager.getMap(), cameraController.getViewport());
+        lightManager.setDay(sleepEvent.isDay()); // still morning in the next map
         zombieRenderers.clear(); // old zombies died with the old world
         // old enemies and bullets died with the old world too, start with empty managers
         factory = new EnemiesManager();
@@ -123,11 +136,16 @@ public class GameScreen extends ScreenAdapter {
     
     @Override
     public void render(float delta) {
-        weaponController.handleWeaponSwap(player, playerRenderer);
+        if (travel.update(delta)) changeMap(travel.getTarget(), travel.getSpawn()); // screen is black, swap the map behind it
+        sleepEvent.update(delta, player, world, mapManager.getMap(), lightManager, gameRenderer);
+        // no moving or shooting while he sleeps or drives
+        if (!sleepEvent.isBusy() && !travel.isBusy()) {
+            weaponController.handleWeaponSwap(player, playerRenderer);
 
-        player.update(cameraController.getMouse(), world, bullet_factory, delta);
+            player.update(cameraController.getMouse(), world, bullet_factory, delta);
 
-        weaponController.handleWeaponEffects(playerRenderer, sounds);
+            weaponController.handleWeaponEffects(playerRenderer, sounds);
+        }
 
         factory.update(player, delta);
 
@@ -142,6 +160,8 @@ public class GameScreen extends ScreenAdapter {
         postProcess.begin(); // game draws into the filter's texture
         gameRenderer.render(delta, world, player, cameraController, mapManager);
         lightManager.render(); // darkness and lights on top of the game
+        sleepEvent.drawFade(shapes, cameraController.getCamera()); // black fades on top of everything
+        travel.draw(batch, shapes, cameraController.getViewport()); // car cutscene over the whole screen
         postProcess.end(delta); // then onto the screen with the cozy shader
         lightManager.flash(gameRenderer.getNewShots()); // this frame's shots light up the room
 
@@ -167,5 +187,6 @@ public class GameScreen extends ScreenAdapter {
         if (playerRenderer != null) playerRenderer.dispose();
         if (postProcess != null) postProcess.dispose();
         if (lightManager != null) lightManager.dispose();
+        travel.dispose();
     }    
 }

@@ -1,16 +1,17 @@
 {
-    "activeFile": "map.tmx",
+    "activeFile": "warehouse.tmx",
     "expandedProjectPaths": [
         "tilesets",
         "."
     ],
     "fileStates": {
         "3232.tsx": {
-            "dynamicWrapping": true
+            "dynamicWrapping": true,
+            "scaleInDock": 0.0625
         },
         "car.tsx": {
             "dynamicWrapping": true,
-            "scaleInDock": 1,
+            "scaleInDock": 0.33,
             "scaleInEditor": 1
         },
         "cars.tsx": {
@@ -32,40 +33,40 @@
         "house.tmx": {
             "expandedObjectLayers": [
                 6,
-                7,
-                9
+                9,
+                7
             ],
-            "scale": 5.5,
-            "selectedLayer": 6,
+            "scale": 1,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 155.27272727272728,
-                "y": 340.6363636363636
+                "x": 340,
+                "y": 347.5
             }
         },
         "house_interior.tmx": {
             "expandedObjectLayers": [
                 9,
-                3,
-                2
+                2,
+                3
             ],
-            "scale": 2,
-            "selectedLayer": 7,
+            "scale": 3,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 732,
-                "y": 523.75
+                "x": 800,
+                "y": 640
             }
         },
         "map.tmx": {
             "expandedObjectLayers": [
                 6,
-                3,
-                5
+                5,
+                3
             ],
             "scale": 1,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 546,
-                "y": 280.5
+                "x": 640,
+                "y": 496
             }
         },
         "realcars.tsx": {
@@ -105,16 +106,20 @@
             "scaleInEditor": 1
         },
         "warehouse.tmx": {
+            "expandedObjectLayers": [
+                6,
+                5
+            ],
             "scale": 1,
-            "selectedLayer": 4,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 1219,
-                "y": 1003.5
+                "x": 1525,
+                "y": 938.5
             }
         }
     },
     "last.externalTilesetPath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets",
-    "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/tilesets",
+    "last.imagePath": "/home/gabriel/repo/B-OOP-301-REN-3-1-2dgame-4/assets/sprites",
     "map.height": 70,
     "map.lastUsedFormat": "tmx",
     "map.width": 100,
@@ -127,23 +132,24 @@
         "tilesets/basics.tsx",
         "tilesets/everything.tsx",
         "car.tsx",
-        "flowers.tsx"
+        "flowers.tsx",
+        "warehouse.tmx"
     ],
     "project": "map.tmx.tiled-project",
-    "property.type": "color",
+    "property.type": "float",
     "recentFiles": [
-        "hospital.tsx",
-        "flowers.tsx",
-        "car.tsx",
-        "tilesets/everything.tsx",
-        "tilesets/basics.tsx",
-        "tilesets/bloodywall.tsx",
-        "tilesets/wall.tsx",
-        "house_interior.tmx",
-        "house.tmx",
         "map.tmx",
-        "tilesets/flooring.tsx",
-        "walls.tsx"
+        "house.tmx",
+        "house_interior.tmx",
+        "tilesets/wall.tsx",
+        "tilesets/bloodywall.tsx",
+        "tilesets/basics.tsx",
+        "tilesets/everything.tsx",
+        "car.tsx",
+        "flowers.tsx",
+        "warehouse.tmx",
+        "hospital.tsx",
+        "tilesets/flooring.tsx"
     ],
     "tileset.lastUsedFilter": "All Files (*)",
     "tileset.lastUsedFormat": "tsx",

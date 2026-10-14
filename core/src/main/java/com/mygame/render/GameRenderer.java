@@ -58,6 +58,7 @@ public class GameRenderer {
     private static final float PLAYER_MUZZLE_OFFSET = 36f; // px from where bullets spawn to the end of the barrel, measured on oconnor_torso_rifle_fire
     private static final float PLAYER_MUZZLE_SIDE = -3f; // px, the rifle sits a bit to his right
     private static final float ENEMY_MUZZLE_OFFSET = 27.5f; // soldiers, 0 if bullets already spawn at the barrel
+    private boolean playerVisible = true;
     private ObjectSet<Bullet> seenBullets = new ObjectSet<>(); // bullets already on screen last frame
     private ObjectSet<Bullet> currentBullets = new ObjectSet<>();
 
@@ -142,7 +143,7 @@ public class GameRenderer {
         // blood on top
         blood.update(delta);
         blood.draw(batch);
-        playerRenderer.draw(batch, px, py);
+        if (playerVisible) playerRenderer.draw(batch, px, py); // hidden while he's in the bed sprite
 
         // bullets with the sprite, turned toward where they fly
         currentBullets.clear();
@@ -199,6 +200,11 @@ public class GameRenderer {
         militaryRenderers.clear(); // soldiers from the old map
         seenBullets.clear();
         newShots.clear();
+    }
+
+    // false = player not drawn, for cutscenes like sleeping
+    public void setPlayerVisible(boolean playerVisible) {
+        this.playerVisible = playerVisible;
     }
 
     // where shots happened this frame, for the LightManager
