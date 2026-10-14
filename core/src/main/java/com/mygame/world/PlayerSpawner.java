@@ -3,7 +3,7 @@ package com.mygame.world;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.MapEvents;
-import com.mygame.entities.Player;
+import com.mygame.entities.Player.Player;
 import com.mygame.items.Weapons.Weapon;
 import com.mygame.system.CameraController;
 

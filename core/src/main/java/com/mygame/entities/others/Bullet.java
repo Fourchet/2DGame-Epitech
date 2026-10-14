@@ -1,4 +1,4 @@
-package com.mygame.entities;
+package com.mygame.entities.others;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;

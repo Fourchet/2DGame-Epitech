@@ -1,4 +1,4 @@
-package com.mygame.entities;
+package com.mygame.entities.Player;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
+import com.mygame.entities.Entity;
 import com.mygame.factory.BulletManager;
 import com.mygame.items.Weapons.Weapon;
 import com.mygame.system.BulletOwner;

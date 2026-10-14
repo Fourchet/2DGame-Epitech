@@ -4,10 +4,10 @@ import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.mygame.entities.Bullet;
-import com.mygame.entities.Enemy;
-import com.mygame.entities.Player;
-import com.mygame.entities.Zombie;
+import com.mygame.entities.Enemy.Enemy;
+import com.mygame.entities.Enemy.Zombie.Zombie;
+import com.mygame.entities.Player.Player;
+import com.mygame.entities.others.Bullet;
 import com.mygame.system.BulletOwner;
 
 public class GameContactListener implements ContactListener {

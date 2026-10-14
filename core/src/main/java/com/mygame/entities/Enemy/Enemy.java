@@ -1,4 +1,4 @@
-package com.mygame.entities;
+package com.mygame.entities.Enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -6,6 +6,8 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
+import com.mygame.entities.Entity;
+import com.mygame.entities.Player.Player;
 
 public abstract class Enemy extends Entity {
 

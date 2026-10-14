@@ -1,10 +1,11 @@
-package com.mygame.entities;
+package com.mygame.entities.Enemy.Military;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import com.mygame.entities.others.BloodEffects;
 
 // draws a soldier: legs follow where he walks, torso and rifle always aim at the player
 public class MilitaryRenderer {

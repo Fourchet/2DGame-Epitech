@@ -1,4 +1,4 @@
-package com.mygame.entities;
+package com.mygame.entities.Player;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
