@@ -1,10 +1,11 @@
-package com.mygame.entities;
+package com.mygame.entities.Enemy.Zombie;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import com.mygame.entities.others.BloodEffects;
 
 // draws a zombie with the shambling walk, always staring at the player
 // blood when it gets shot, death anim at 0 hp, then the corpse stays on the floor

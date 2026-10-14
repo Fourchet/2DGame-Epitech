@@ -1,11 +1,13 @@
-package com.mygame.entities;
+package com.mygame.entities.Enemy.Military;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
+import com.mygame.entities.Enemy.Enemy;
+import com.mygame.entities.Player.Player;
 import com.mygame.factory.BulletManager;
-import com.mygame.items.Weapon;
+import com.mygame.items.Weapons.Weapon;
 import com.mygame.system.BulletOwner;
 
 public class Military extends Enemy {
@@ -119,7 +121,6 @@ public class Military extends Enemy {
 
     Vector2 shooterPosition = getPosition();
     Vector2 playerPosition = player.getPosition();
-    float bulletSpawnOffset = 12f;
 
     shootDirection.set(
             playerPosition.x - shooterPosition.x,

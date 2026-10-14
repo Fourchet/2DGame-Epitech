@@ -6,18 +6,17 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.mygame.entities.Player;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.mygame.entities.PlayerRenderer;
 import com.mygame.factory.BulletManager;
 import com.mygame.factory.EnemiesManager;
-import com.mygame.items.MilitaryWeapon;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.mygame.entities.ZombieRenderer;
-import com.mygame.entities.Zombie;
+import com.mygame.entities.Enemy.Zombie.Zombie;
+import com.mygame.entities.Enemy.Zombie.ZombieRenderer;
+import com.mygame.entities.Player.Player;
+import com.mygame.entities.Player.PlayerRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.mygame.audio.SoundManager;
 import com.mygame.system.CameraController;
@@ -89,10 +88,17 @@ public class GameScreen extends ScreenAdapter {
         gameRenderer = new GameRenderer(batch, playerRenderer, zombieWalk, bodies, zombieRenderers, bulletSprite, shapes, sounds);
 
         // spawns enemies
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f); //default zombie spawn
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 110, mapManager.getMapHeight() / 2f); //default zombie spawn
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 130, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
 
-
-        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
         //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
         //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
 

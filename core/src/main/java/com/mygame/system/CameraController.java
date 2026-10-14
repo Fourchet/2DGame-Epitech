@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygame.Physics;
-import com.mygame.entities.Player;
+import com.mygame.entities.Player.Player;
 
 public class CameraController {
     private static final float LOOK_AHEAD = 0.4f;       // how far the camera leans toward the mouse

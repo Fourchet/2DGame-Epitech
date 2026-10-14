@@ -1,8 +1,10 @@
-package com.mygame.entities;
+package com.mygame.entities.Enemy.Zombie;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
+import com.mygame.entities.Enemy.Enemy;
+import com.mygame.entities.Player.Player;
 
 public class Zombie extends Enemy {
   

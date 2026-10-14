@@ -3,11 +3,11 @@ package com.mygame.factory;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-import com.mygame.entities.Enemy;
-import com.mygame.entities.Military;
-import com.mygame.entities.Player;
-import com.mygame.entities.Zombie;
-import com.mygame.items.Weapon;
+import com.mygame.entities.Enemy.Enemy;
+import com.mygame.entities.Enemy.Military.Military;
+import com.mygame.entities.Enemy.Zombie.Zombie;
+import com.mygame.entities.Player.Player;
+import com.mygame.items.Weapons.Weapon;
 
 public class EnemiesManager {
 

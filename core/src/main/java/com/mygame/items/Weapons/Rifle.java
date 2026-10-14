@@ -1,4 +1,4 @@
-package com.mygame.items;
+package com.mygame.items.Weapons;
 
 // ak47
 public class Rifle extends Weapon {
