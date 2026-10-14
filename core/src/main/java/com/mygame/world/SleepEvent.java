@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.mygame.Physics;
-import com.mygame.entities.Player;
+import com.mygame.entities.Player.Player;
 import com.mygame.render.GameRenderer;
 import com.mygame.render.LightManager;
 
