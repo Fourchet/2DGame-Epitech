@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygame.entities.PlayerRenderer;
 import com.mygame.factory.BulletManager;
 import com.mygame.factory.EnemiesManager;
-import com.mygame.items.MilitaryWeapon;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -85,10 +84,17 @@ public class GameScreen extends ScreenAdapter {
         gameRenderer = new GameRenderer(batch, playerRenderer, zombieWalk, bodies, zombieRenderers, bulletSprite, shapes, sounds);
 
         // spawns enemies
-        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f); //default zombie spawn
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 110, mapManager.getMapHeight() / 2f); //default zombie spawn
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 130, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
+        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
 
-
-        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
         //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
         //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
 

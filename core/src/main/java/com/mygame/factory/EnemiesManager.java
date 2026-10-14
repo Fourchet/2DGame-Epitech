@@ -7,7 +7,7 @@ import com.mygame.entities.Enemy;
 import com.mygame.entities.Military;
 import com.mygame.entities.Player;
 import com.mygame.entities.Zombie;
-import com.mygame.items.Weapon;
+import com.mygame.items.Weapons.Weapon;
 
 public class EnemiesManager {
 

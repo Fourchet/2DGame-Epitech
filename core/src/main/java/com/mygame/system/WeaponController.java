@@ -5,9 +5,9 @@ import com.badlogic.gdx.Input;
 import com.mygame.audio.SoundManager;
 import com.mygame.entities.Player;
 import com.mygame.entities.PlayerRenderer;
-import com.mygame.items.Pistol;
-import com.mygame.items.Rifle;
-import com.mygame.items.Weapon;
+import com.mygame.items.Weapons.Pistol;
+import com.mygame.items.Weapons.Rifle;
+import com.mygame.items.Weapons.Weapon;
 
 public class WeaponController {
     private final Weapon pistol = new Pistol();

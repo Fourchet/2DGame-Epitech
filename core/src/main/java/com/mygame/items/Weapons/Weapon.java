@@ -1,6 +1,8 @@
-package com.mygame.items;
+package com.mygame.items.Weapons;
 
-public abstract class Weapon {
+import com.mygame.items.Items;
+
+public abstract class Weapon extends Items{
   protected String name;
   protected float damage;
   protected float bulletSpeed;
@@ -11,6 +13,7 @@ public abstract class Weapon {
   protected boolean isReloading = false;
   
   public Weapon(String name, float damage, float bulletSpeed, int maxBullets, float reloadTime){
+    super("Weapon");
     this.damage = damage;
     this.name = name;
     this.bulletSpeed = bulletSpeed;

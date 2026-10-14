@@ -1,4 +1,4 @@
-package com.mygame.items;
+package com.mygame.items.Weapons;
 
 public class Pistol extends Weapon {
   public Pistol(){
