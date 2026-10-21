@@ -100,19 +100,6 @@ public class Player extends Entity {
         }
     }
 
-    // getters 
-    public Body getBody() {
-        return body;
-    }
-
-    public Vector2 getPosition() {
-        return body.getPosition();
-    }
-
-    public float getHealth() {
-      return health;
-    }
-
     // setters 
 
     public void setWeapon(Weapon weapon) {
