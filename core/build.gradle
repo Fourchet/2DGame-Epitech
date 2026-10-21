@@ -21,3 +21,8 @@ dependencies {
 jar {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+javadoc {
+    destinationDir = file("$rootDir/docs/javadoc")
+    options.addStringOption('Xmaxwarns', '1000')
+}
