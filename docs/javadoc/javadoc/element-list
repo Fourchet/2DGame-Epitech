@@ -1,0 +1,15 @@
+com.mygame
+com.mygame.audio
+com.mygame.collisions
+com.mygame.entities
+com.mygame.entities.Enemy
+com.mygame.entities.Enemy.Military
+com.mygame.entities.Enemy.Zombie
+com.mygame.entities.others
+com.mygame.entities.Player
+com.mygame.factory
+com.mygame.items
+com.mygame.items.Weapons
+com.mygame.render
+com.mygame.system
+com.mygame.world
