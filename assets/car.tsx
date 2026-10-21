@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.12.2" name="car" tilewidth="207" tileheight="172" tilecount="54" columns="0">
+<tileset version="1.10" tiledversion="1.12.2" name="car" tilewidth="207" tileheight="172" tilecount="55" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="2">
   <image source="tilesets/car-truck3-x2.5-90left.png" width="172" height="70"/>
@@ -162,5 +162,8 @@
  </tile>
  <tile id="62">
   <image source="tilesets/car_truck_yellow_down.png" width="70" height="172"/>
+ </tile>
+ <tile id="63">
+  <image source="sprites/bed_sleeping.png" width="150" height="150"/>
  </tile>
 </tileset>

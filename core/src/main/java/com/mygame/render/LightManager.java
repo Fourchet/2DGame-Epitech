@@ -27,6 +27,8 @@ import com.mygame.Physics;
 // walls block the light so they cast real shadows
 public class LightManager {
     private static final Color DEFAULT_AMBIENT = new Color(0.1f, 0.08f, 0.12f, 0.35f); // map with no "ambient" property: dim evening
+    private static final Color DEFAULT_DAY = new Color(1f, 0.85f, 0.6f, 0.95f); // map with no "dayAmbient" property: warm morning
+    private static final float DAY_TINT = 0.06f; // how much of the day colour gets added on top, more = washed out
     private static final Color DEFAULT_LAMP = new Color(1f, 0.75f, 0.45f, 0.85f); // warm bulb
     private static final Color DEFAULT_SUN = new Color(1f, 0.9f, 0.7f, 0.6f); // late afternoon sun
     private static final float DEFAULT_RADIUS = 120f; // px
@@ -57,6 +59,8 @@ public class LightManager {
     private final Array<Float> tvTimers = new Array<>(); // time until the next "scene cut"
     private final Array<Color> tvColors = new Array<>(); // the colour you gave it in tiled
     private float time;
+    private Color nightAmbient, dayAmbient;
+    private final Array<Light> nightOnly = new Array<>(); // lamps switched off in the day
     private final Array<ConeLight> flashes = new Array<>(); // reused muzzle flash lights
     private final float[] flashTimers = new float[FLASH_POOL];
     private final float[] flashDurations = new float[FLASH_POOL]; // how long this one lasts
@@ -68,7 +72,12 @@ public class LightManager {
         rayHandler.setBlurNum(2); // soft edges
         // ambient alpha = how bright the map is without lights, DARKNESS on top to tune every map at once
         Color a = readColor(map.getProperties(), "ambient", DEFAULT_AMBIENT);
-        rayHandler.setAmbientLight(a.r, a.g, a.b, a.a * DARKNESS);
+        nightAmbient = new Color(a.r, a.g, a.b, a.a * DARKNESS);
+        // the ambient colour gets added over the whole screen, so only a touch of it or the day goes white
+        // alpha = how bright the day is, 1 = the art at full brightness
+        Color d = readColor(map.getProperties(), "dayAmbient", DEFAULT_DAY);
+        dayAmbient = new Color(d.r * DAY_TINT, d.g * DAY_TINT, d.b * DAY_TINT, d.a);
+        rayHandler.setAmbientLight(nightAmbient);
         resize(viewport);
 
         // muzzle flash lights made once and reused, off until someone shoots
@@ -155,13 +164,25 @@ public class LightManager {
                 tvTimers.add(0f);
                 tvColors.add(new Color(tiledColor));
             }
+            if (!bool(p, "tv") && !bool(p, "dayOn")) nightOnly.add(light); // lamps go off in the day, tv and dayOn ones stay
         }
+    }
+
+    // day = bright ambient and lamps off, night = back to the map's ambient and lamps on
+    public void setDay(boolean day) {
+        rayHandler.setAmbientLight(day ? dayAmbient : nightAmbient);
+        for (Light light : nightOnly) light.setActive(!day);
     }
 
     // number property, int or float in tiled both work
     private static float num(MapProperties p, String key, float fallback) {
         Object value = p.get(key);
-        return value instanceof Number ? ((Number) value).floatValue() : fallback;
+        if (value instanceof Number) return ((Number) value).floatValue();
+        try {
+            return Float.parseFloat(String.valueOf(value).trim()); // typed as a string in tiled, still works
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 
     private static float dist(float x1, float y1, float x2, float y2) {
