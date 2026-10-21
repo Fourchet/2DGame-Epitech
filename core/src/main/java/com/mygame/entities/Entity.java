@@ -6,8 +6,8 @@ import com.mygame.Physics;
 
 public abstract class Entity {
 
-    protected float health;
-    protected final Body body;
+    private float health;
+    private final Body body;
 
     public Entity(World world, float x, float y, float size, float health) {
         this.health = health;

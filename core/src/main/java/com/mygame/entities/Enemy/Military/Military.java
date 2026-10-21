@@ -2,6 +2,7 @@ package com.mygame.entities.Enemy.Military;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
 import com.mygame.entities.Enemy.Enemy;
@@ -25,6 +26,8 @@ public class Military extends Enemy {
   private World world;
   private Weapon weapon;
   private float attackTimer = 0f;
+
+  Body body = this.getBody();
 
   public Military(World world, float x, float y, Weapon weapon, BulletManager bulletManager) {
     super(world, x, y,50f, 12f ); // adjust health here

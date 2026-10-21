@@ -1,6 +1,7 @@
 package com.mygame.entities.Enemy.Zombie;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
 import com.mygame.entities.Enemy.Enemy;
@@ -16,6 +17,8 @@ public class Zombie extends Enemy {
   private static final float cooldown = 2f;
   private boolean touchingPlayer = false;
   private float attackTimer = 0f;
+
+  Body body = this.getBody();
 
   public Zombie(World world, float x, float y) {
     super(world, x, y,100f, 12f );

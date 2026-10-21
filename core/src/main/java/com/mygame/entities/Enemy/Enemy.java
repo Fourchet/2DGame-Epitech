@@ -3,6 +3,7 @@ package com.mygame.entities.Enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygame.Physics;
@@ -16,6 +17,9 @@ public abstract class Enemy extends Entity {
     private boolean dead = false;
     private float deathTimer = DEATH_DELAY;
     protected float damage;
+
+    Body body = this.getBody();
+    float health = this.getHealth();
 
     public Enemy(World world, float x, float y, float health, float damage) {
       super(world, x, y, SIZE, health);

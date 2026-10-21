@@ -19,6 +19,9 @@ public class Player extends Entity {
     private final Vector2 direction = new Vector2();
     private Weapon weapon;
 
+    Body body = this.getBody();
+    float health = this.getHealth();
+    
     public Player(World world, float x, float y, Weapon weapon) {
         super(world, x, y, SIZE, 250f);
 
