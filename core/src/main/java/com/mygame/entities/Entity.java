@@ -8,6 +8,10 @@ public abstract class Entity {
 
     private float health;
     private final Body body;
+    private boolean dead = false;
+
+    private static final float DEATH_DELAY = 5f;
+    private float deathTimer = DEATH_DELAY;
 
     public Entity(World world, float x, float y, float size, float health) {
         this.health = health;
@@ -46,6 +50,27 @@ public abstract class Entity {
         body.setUserData(this);
     }
 
+
+    public void takeDamage(float damageSustained){
+      this.health -= damageSustained;
+
+      if (this.health <= 0 && !dead){
+        this.health = 0;
+        dead = true;
+        body.setLinearVelocity(0, 0);
+        body.setAngularVelocity(0);
+        body.setFixedRotation(true);
+      }
+      System.out.println(getClass().getName() + " has " + health);
+    }
+
+    public void updateDeath(float delta) {
+      if (!dead) {
+          return;
+      }
+      deathTimer -= delta;
+    }
+
     public Body getBody() {
         return body;
     }
@@ -56,6 +81,14 @@ public abstract class Entity {
 
     public float getHealth() {
         return health;
+    }
+
+    public boolean isDead() {
+      return dead;
+    }
+
+    public boolean canBeDisable() {
+      return dead && deathTimer <= 0f;
     }
 
     public void setHealth(float health) {

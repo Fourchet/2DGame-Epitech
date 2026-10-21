@@ -13,9 +13,7 @@ import com.mygame.entities.Player.Player;
 public abstract class Enemy extends Entity {
 
     private static final float SIZE = 16f;
-    private static final float DEATH_DELAY = 5f;
-    private boolean dead = false;
-    private float deathTimer = DEATH_DELAY;
+
     protected float damage;
 
     Body body = this.getBody();
@@ -42,36 +40,12 @@ public abstract class Enemy extends Entity {
     return damage;
   }
 
-  public boolean isDead() {
-    return dead;
-  }
-
   // setters 
 
   public void setDamage(int damage) {
     this.damage = damage;
   }
-
-
-  public void takeDamage(float damageSustained){
-    this.health -= damageSustained;
-
-    if (this.health <= 0 && !dead){
-      this.health = 0;
-      dead = true;
-      body.setLinearVelocity(0, 0);
-      body.setAngularVelocity(0);
-      body.setFixedRotation(true);
-    }
-    System.out.println(getClass().getName() + " has " + health);
-  }
   
-  public void updateDeath(float delta) {
-    if (!dead) {
-        return;
-    }
-    deathTimer -= delta;
-  }
 
   public void disableCollision() {
     for (Fixture fixture : body.getFixtureList()) {
@@ -81,9 +55,7 @@ public abstract class Enemy extends Entity {
     }
   }
 
-  public boolean canBeDisable() {
-      return dead && deathTimer <= 0f;
-  }
+
   
   // abstract methods
   public abstract void update(Player player, float delta);

@@ -91,15 +91,6 @@ public class Player extends Entity {
         bulletManager.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);
     }  
 
-    public void takeDamage(float damageSustained){
-        this.health -= damageSustained;
-        System.out.println(this + "is taking damage, he has now " + health +"hp");
-        if (this.health < 0){
-            this.health = 0;
-            System.out.println("Player's dead");
-        }
-    }
-
     // setters 
 
     public void setWeapon(Weapon weapon) {
