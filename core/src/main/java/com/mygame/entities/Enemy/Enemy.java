@@ -42,7 +42,7 @@ public abstract class Enemy extends Entity {
 
   // setters 
 
-  public void setDamage(int damage) {
+  public void setDamage(float damage) {
     this.damage = damage;
   }
   
