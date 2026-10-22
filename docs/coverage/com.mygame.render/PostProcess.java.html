@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PostProcess.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.render</a> &gt; <span class="el_source">PostProcess.java</span></div><h1>PostProcess.java</h1><pre class="source lang-java linenums">package com.mygame.render;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+
+// whole screen filter: the game draws into a texture, then it goes to the screen through post.frag
+public class PostProcess {
+    private final ShaderProgram shader;
+<span class="nc" id="L15">    private final SpriteBatch batch = new SpriteBatch(); // its own batch so the game's camera isn't touched</span>
+    private FrameBuffer fbo;
+    private TextureRegion frame;
+    private float time; // for the grain
+
+<span class="nc" id="L20">    public PostProcess() {</span>
+<span class="nc" id="L21">        ShaderProgram.pedantic = false; // unused uniforms don't crash</span>
+<span class="nc" id="L22">        shader = new ShaderProgram(Gdx.files.internal(&quot;shaders/post.vert&quot;), Gdx.files.internal(&quot;shaders/post.frag&quot;));</span>
+<span class="nc bnc" id="L23" title="All 2 branches missed.">        if (!shader.isCompiled()) throw new GdxRuntimeException(&quot;post.frag: &quot; + shader.getLog()); // tells you the shader line that's wrong</span>
+<span class="nc" id="L24">        batch.setShader(shader);</span>
+<span class="nc" id="L25">        batch.disableBlending(); // the frame is opaque anyway</span>
+<span class="nc" id="L26">        resize();</span>
+<span class="nc" id="L27">    }</span>
+
+    // call from GameScreen.resize, the texture has to match the window
+    public void resize() {
+<span class="nc" id="L31">        int w = Gdx.graphics.getBackBufferWidth();</span>
+<span class="nc" id="L32">        int h = Gdx.graphics.getBackBufferHeight();</span>
+<span class="nc bnc" id="L33" title="All 4 branches missed.">        if (w &lt;= 0 || h &lt;= 0) return; // window minimized</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (fbo != null) fbo.dispose();</span>
+<span class="nc" id="L35">        fbo = new FrameBuffer(Pixmap.Format.RGBA8888, w, h, false);</span>
+<span class="nc" id="L36">        fbo.getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest); // stays crisp</span>
+<span class="nc" id="L37">        frame = new TextureRegion(fbo.getColorBufferTexture());</span>
+<span class="nc" id="L38">        frame.flip(false, true); // framebuffers come out upside down</span>
+<span class="nc" id="L39">        batch.getProjectionMatrix().setToOrtho2D(0, 0, w, h);</span>
+<span class="nc" id="L40">    }</span>
+
+    // everything drawn after this goes into the texture instead of the screen
+    public void begin() {
+<span class="nc" id="L44">        fbo.begin();</span>
+<span class="nc" id="L45">    }</span>
+
+    // draws the texture on screen with the effect
+    public void end(float delta) {
+<span class="nc" id="L49">        fbo.end();</span>
+<span class="nc" id="L50">        time = (time + delta) % 100f; // kept small so the grain doesn't lose precision</span>
+<span class="nc" id="L51">        Gdx.gl.glViewport(0, 0, fbo.getWidth(), fbo.getHeight());</span>
+<span class="nc" id="L52">        batch.begin();</span>
+<span class="nc" id="L53">        shader.setUniformf(&quot;u_time&quot;, time);</span>
+<span class="nc" id="L54">        batch.draw(frame, 0, 0, fbo.getWidth(), fbo.getHeight());</span>
+<span class="nc" id="L55">        batch.end();</span>
+<span class="nc" id="L56">    }</span>
+
+    public void dispose() {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (fbo != null) fbo.dispose();</span>
+<span class="nc" id="L60">        shader.dispose();</span>
+<span class="nc" id="L61">        batch.dispose();</span>
+<span class="nc" id="L62">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TravelCutscene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.world</a> &gt; <span class="el_source">TravelCutscene.java</span></div><h1>TravelCutscene.java</h1><pre class="source lang-java linenums">package com.mygame.world;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.viewport.Viewport;
+
+// a door with a &quot;cutscene&quot; property plays an animation full screen before you arrive (oconnor driving there)
+// fade to black -&gt; the new map loads behind it -&gt; animation -&gt; fade into the new map
+<span class="nc" id="L18">public class TravelCutscene {</span>
+    private static final float FADE = 0.5f; // seconds, game to black and black to the new map
+    private static final float ANIM_FADE = 0.3f; // seconds, the animation fading in and out of black
+
+<span class="nc" id="L22">    private float t = -1; // -1 = nothing going on</span>
+    private float duration; // how long the animation shows
+    private boolean loaded; // new map already swapped in
+    private String target, spawn;
+    private Texture texture;
+    private Animation&lt;TextureRegion&gt; animation;
+<span class="nc" id="L28">    private final Matrix4 screen = new Matrix4();</span>
+
+    public boolean isBusy() {
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        return t &gt;= 0;</span>
+    }
+
+    public String getTarget() {
+<span class="nc" id="L35">        return target;</span>
+    }
+
+    public String getSpawn() {
+<span class="nc" id="L39">        return spawn;</span>
+    }
+
+    // door properties: cutscene (image path), frames (how many in the strip), frameTime (seconds each), duration (seconds, loops if longer than one play)
+    public void start(MapObject door) {
+<span class="nc" id="L44">        MapProperties p = door.getProperties();</span>
+<span class="nc" id="L45">        target = p.get(&quot;target&quot;, String.class);</span>
+<span class="nc" id="L46">        spawn = p.get(&quot;spawn&quot;, String.class);</span>
+<span class="nc" id="L47">        String path = p.get(&quot;cutscene&quot;, String.class);</span>
+<span class="nc" id="L48">        int frames = Math.max(1, (int) num(p, &quot;frames&quot;, 1));</span>
+<span class="nc" id="L49">        float frameTime = num(p, &quot;frameTime&quot;, 0.1f);</span>
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (texture != null) texture.dispose();</span>
+<span class="nc" id="L52">        texture = null;</span>
+<span class="nc" id="L53">        animation = null;</span>
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (path != null &amp;&amp; Gdx.files.internal(path).exists()) {</span>
+<span class="nc" id="L55">            texture = new Texture(path);</span>
+<span class="nc" id="L56">            TextureRegion[] regions = TextureRegion.split(texture, texture.getWidth() / frames, texture.getHeight())[0];</span>
+<span class="nc" id="L57">            animation = new Animation&lt;&gt;(frameTime, regions);</span>
+<span class="nc" id="L58">            animation.setPlayMode(Animation.PlayMode.LOOP); // car keeps driving if duration is longer than the strip</span>
+<span class="nc" id="L59">        } else {</span>
+<span class="nc" id="L60">            Gdx.app.log(&quot;TravelCutscene&quot;, &quot;no &quot; + path + &quot;, just a black screen&quot;);</span>
+        }
+<span class="nc" id="L62">        duration = num(p, &quot;duration&quot;, frames * frameTime); // default = plays once</span>
+<span class="nc" id="L63">        Gdx.app.log(&quot;TravelCutscene&quot;, path + &quot;: &quot; + frames + &quot; frames, &quot; + frameTime + &quot; s each, &quot; + duration + &quot; s total&quot;);</span>
+
+<span class="nc" id="L65">        loaded = false;</span>
+<span class="nc" id="L66">        t = 0;</span>
+<span class="nc" id="L67">    }</span>
+
+    // true once, the frame the screen is fully black: that's when GameScreen swaps the map
+    public boolean update(float delta) {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (t &lt; 0) return false;</span>
+<span class="nc" id="L72">        t += delta;</span>
+<span class="nc" id="L73">        float animEnd = FADE + duration;</span>
+        // space or enter skips the drive
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        if (t &gt; FADE &amp;&amp; t &lt; animEnd - ANIM_FADE</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">                &amp;&amp; (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER))) {</span>
+<span class="nc" id="L77">            t = animEnd - ANIM_FADE;</span>
+        }
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (t &gt;= animEnd + FADE) {</span>
+<span class="nc" id="L80">            t = -1; // done, back to playing</span>
+<span class="nc" id="L81">            return false;</span>
+        }
+<span class="nc bnc" id="L83" title="All 4 branches missed.">        if (!loaded &amp;&amp; t &gt;= FADE) {</span>
+<span class="nc" id="L84">            loaded = true;</span>
+<span class="nc" id="L85">            return true;</span>
+        }
+<span class="nc" id="L87">        return false;</span>
+    }
+
+    // black amount over everything, 0 = see through, 1 = black
+    private float black() {
+<span class="nc" id="L92">        float animStart = FADE, animEnd = FADE + duration;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (t &lt; animStart) return t / FADE; // old map going black</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (t &lt; animStart + ANIM_FADE) return 1 - (t - animStart) / ANIM_FADE; // animation appearing</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (t &lt; animEnd - ANIM_FADE) return 0;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (t &lt; animEnd) return (t - (animEnd - ANIM_FADE)) / ANIM_FADE; // animation going black</span>
+<span class="nc" id="L97">        return 1 - (t - animEnd) / FADE; // new map appearing</span>
+    }
+
+    // call last, after the lights and the sleep fade, draws over the whole screen
+    public void draw(SpriteBatch batch, ShapeRenderer shapes, Viewport viewport) {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (t &lt; 0) return;</span>
+<span class="nc" id="L103">        float w = viewport.getWorldWidth();</span>
+<span class="nc" id="L104">        float h = viewport.getWorldHeight();</span>
+<span class="nc" id="L105">        screen.setToOrtho2D(0, 0, w, h); // screen coordinates, not the map's</span>
+<span class="nc" id="L106">        float animStart = FADE, animEnd = FADE + duration;</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">        boolean showingAnim = t &gt;= animStart &amp;&amp; t &lt; animEnd;</span>
+
+<span class="nc" id="L109">        Gdx.gl.glEnable(GL20.GL_BLEND);</span>
+<span class="nc" id="L110">        shapes.setProjectionMatrix(screen);</span>
+<span class="nc" id="L111">        shapes.begin(ShapeRenderer.ShapeType.Filled);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (showingAnim) {</span>
+<span class="nc" id="L113">            shapes.setColor(0, 0, 0, 1);</span>
+<span class="nc" id="L114">            shapes.rect(0, 0, w, h); // black behind the animation</span>
+        }
+<span class="nc" id="L116">        shapes.end();</span>
+
+<span class="nc bnc" id="L118" title="All 4 branches missed.">        if (showingAnim &amp;&amp; animation != null) {</span>
+<span class="nc" id="L119">            TextureRegion frame = animation.getKeyFrame(t - animStart);</span>
+            // as big as fits, whole pixels when it's smaller than the screen so pixel art stays crisp
+<span class="nc" id="L121">            float scale = Math.min(w / frame.getRegionWidth(), h / frame.getRegionHeight());</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (scale &gt;= 1) scale = (float) Math.floor(scale);</span>
+<span class="nc" id="L123">            float fw = frame.getRegionWidth() * scale;</span>
+<span class="nc" id="L124">            float fh = frame.getRegionHeight() * scale;</span>
+<span class="nc" id="L125">            batch.setProjectionMatrix(screen);</span>
+<span class="nc" id="L126">            batch.begin();</span>
+<span class="nc" id="L127">            batch.draw(frame, (w - fw) / 2f, (h - fh) / 2f, fw, fh);</span>
+<span class="nc" id="L128">            batch.end();</span>
+        }
+
+<span class="nc" id="L131">        float a = Math.max(0, Math.min(1, black()));</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (a &gt; 0) {</span>
+<span class="nc" id="L133">            Gdx.gl.glEnable(GL20.GL_BLEND);</span>
+<span class="nc" id="L134">            shapes.begin(ShapeRenderer.ShapeType.Filled);</span>
+<span class="nc" id="L135">            shapes.setColor(0, 0, 0, a);</span>
+<span class="nc" id="L136">            shapes.rect(0, 0, w, h);</span>
+<span class="nc" id="L137">            shapes.end();</span>
+        }
+<span class="nc" id="L139">    }</span>
+
+    // number property, int or float in tiled both work
+    private static float num(MapProperties p, String key, float fallback) {
+<span class="nc" id="L143">        Object value = p.get(key);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (value instanceof Number) return ((Number) value).floatValue();</span>
+        try {
+<span class="nc" id="L146">            return Float.parseFloat(String.valueOf(value).trim()); // typed as a string in tiled, still works</span>
+<span class="nc" id="L147">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L148">            return fallback;</span>
+        }
+    }
+
+    public void dispose() {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        if (texture != null) texture.dispose();</span>
+<span class="nc" id="L154">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

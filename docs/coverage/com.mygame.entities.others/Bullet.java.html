@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Bullet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.entities.others</a> &gt; <span class="el_source">Bullet.java</span></div><h1>Bullet.java</h1><pre class="source lang-java linenums">package com.mygame.entities.others;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.World;
+import com.mygame.Physics;
+import com.mygame.system.BulletOwner;
+
+public class Bullet {
+
+    private static final float SIZE = 4f;
+    private final BulletOwner owner;
+    private final Body body;
+    private final float damage;
+<span class="fc" id="L20">    private boolean destroyed = false;</span>
+    
+    public Bullet(
+            World world,
+            float x,
+            float y,
+            Vector2 direction,
+            float speed,
+            float damage, 
+<span class="fc" id="L29">            BulletOwner owner) {</span>
+
+<span class="fc" id="L31">        this.damage = damage;</span>
+<span class="fc" id="L32">        this.owner = owner;</span>
+
+        // description du body
+<span class="fc" id="L35">        BodyDef bodyDef = new BodyDef();</span>
+<span class="fc" id="L36">        bodyDef.type = BodyDef.BodyType.DynamicBody;</span>
+
+<span class="fc" id="L38">        bodyDef.position.set(</span>
+                x / Physics.PPM,
+                y / Physics.PPM);
+
+        // creation du body dans Box2D
+<span class="fc" id="L43">        body = world.createBody(bodyDef);</span>
+
+<span class="fc" id="L45">        body.setBullet(true);</span>
+
+<span class="fc" id="L47">        CircleShape shape = new CircleShape();</span>
+<span class="fc" id="L48">        shape.setRadius(SIZE / 2f / Physics.PPM);</span>
+
+<span class="fc" id="L50">        FixtureDef fixtureDef = new FixtureDef();</span>
+<span class="fc" id="L51">        fixtureDef.shape = shape;</span>
+<span class="fc" id="L52">        fixtureDef.isSensor = true;</span>
+
+<span class="fc" id="L54">        body.createFixture(fixtureDef);</span>
+
+<span class="fc" id="L56">        shape.dispose();</span>
+
+<span class="fc" id="L58">        body.setUserData(this);</span>
+
+<span class="fc" id="L60">        Vector2 bulletDirection = new Vector2(direction).nor();</span>
+
+<span class="fc" id="L62">        body.setLinearVelocity(</span>
+                bulletDirection.x * speed / Physics.PPM,
+                bulletDirection.y * speed / Physics.PPM);
+<span class="fc" id="L65">    }</span>
+    
+    public void draw(ShapeRenderer shapes) {
+
+<span class="nc" id="L69">        float x = body.getPosition().x * Physics.PPM;</span>
+<span class="nc" id="L70">        float y = body.getPosition().y * Physics.PPM;</span>
+
+<span class="nc" id="L72">        shapes.setColor(Color.YELLOW);</span>
+
+<span class="nc" id="L74">        shapes.circle(</span>
+                x,
+                y,
+                SIZE / 2f);
+<span class="nc" id="L78">    }</span>
+
+
+    public void destroy(){
+<span class="fc" id="L82">        destroyed = true;</span>
+<span class="fc" id="L83">    }</span>
+
+    // getters 
+
+    public Body getBody() {
+<span class="fc" id="L88">        return body;</span>
+    }
+
+    public Vector2 getPosition() {
+<span class="nc" id="L92">        return body.getPosition();</span>
+    }
+
+    public float getDamage() {
+<span class="nc" id="L96">        return damage;</span>
+    }
+
+    public BulletOwner getOwner() {
+<span class="nc" id="L100">      return owner;</span>
+    }
+
+    public boolean isDestroyed(){
+<span class="fc" id="L104">        return destroyed;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

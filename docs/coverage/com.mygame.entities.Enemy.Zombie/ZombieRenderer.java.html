@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ZombieRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.entities.Enemy.Zombie</a> &gt; <span class="el_source">ZombieRenderer.java</span></div><h1>ZombieRenderer.java</h1><pre class="source lang-java linenums">package com.mygame.entities.Enemy.Zombie;
+
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.mygame.entities.others.BloodEffects;
+
+// draws a zombie with the shambling walk, always staring at the player
+// blood when it gets shot, death anim at 0 hp, then the corpse stays on the floor
+public class ZombieRenderer {
+    private static final int FRAME_WIDTH = 60; // zombie_walk frames are 60x50
+    public static final int DEATH_FRAMES = 5; // how many frames you drew in zombie_death.png, the width is worked out from it
+    public static final int DEATH2_FRAMES = 9; // same for zombie_death2.png (100x50 frames)
+    private static final float RARE_DEATH_CHANCE = 0.1f; // zombie_death plays 10% of the time, zombie_death2 the rest
+    private static final float FRAME_DURATION = 0.14f; // slow steps sell the shamble
+    private static final float DEATH_FRAME_DURATION = 0.1f; // speed of the fall
+    private static final float SCALE = 0.7f; // same size as oconnor
+    private static final float FLINCH = 2f; // px knocked back when hit
+    private static final float FLINCH_TIME = 0.08f; // how long the knock back lasts
+    private static final float HEAD_POP_DELAY = 0.5f; // seconds after death before the head pop sound, rare death only
+
+    private final Animation&lt;TextureRegion&gt; walk;
+    private final Animation&lt;TextureRegion&gt; rareDeath; // zombie_death, the rare one
+    private final Animation&lt;TextureRegion&gt; commonDeath; // zombie_death2, the usual one
+    private Animation&lt;TextureRegion&gt; death; // the one picked when he dies, null = he just freezes
+    private final BloodEffects blood;
+    private float angle; // degrees, 0 = facing right
+    private float walkTime;
+    private boolean moving;
+
+    private float lastX, lastY;
+    private boolean hasLastPosition;
+
+<span class="nc" id="L36">    private float lastHealth = -1f; // to notice when he gets hit</span>
+    private float flinchTimer;
+    private boolean dead;
+    private float deathTime;
+    private boolean headPopPending; // rare death picked, sound not played yet
+
+    public ZombieRenderer(Animation&lt;TextureRegion&gt; walk, Animation&lt;TextureRegion&gt; rareDeath,
+<span class="nc" id="L43">                          Animation&lt;TextureRegion&gt; commonDeath, BloodEffects blood) {</span>
+<span class="nc" id="L44">        this.walk = walk;</span>
+<span class="nc" id="L45">        this.rareDeath = rareDeath;</span>
+<span class="nc" id="L46">        this.commonDeath = commonDeath;</span>
+<span class="nc" id="L47">        this.blood = blood;</span>
+<span class="nc" id="L48">        walkTime = MathUtils.random(0f, 2f); // so zombies don't all step in sync</span>
+<span class="nc" id="L49">    }</span>
+
+    // load the strip once and share it between all zombies
+    public static Animation&lt;TextureRegion&gt; loadWalk(Texture texture) {
+<span class="nc" id="L53">        TextureRegion[] frames = TextureRegion.split(texture, FRAME_WIDTH, texture.getHeight())[0];</span>
+<span class="nc" id="L54">        Animation&lt;TextureRegion&gt; animation = new Animation&lt;&gt;(FRAME_DURATION, frames);</span>
+<span class="nc" id="L55">        animation.setPlayMode(Animation.PlayMode.LOOP);</span>
+<span class="nc" id="L56">        return animation;</span>
+    }
+
+    // same for the death, plays once and stays on the last frame (the corpse)
+    public static Animation&lt;TextureRegion&gt; loadDeath(Texture texture, int frameCount) {
+<span class="nc" id="L61">        int w = texture.getWidth() / frameCount; // cuts exactly between frames whatever their size</span>
+<span class="nc" id="L62">        TextureRegion[] frames = TextureRegion.split(texture, w, texture.getHeight())[0];</span>
+<span class="nc" id="L63">        Animation&lt;TextureRegion&gt; animation = new Animation&lt;&gt;(DEATH_FRAME_DURATION, frames);</span>
+<span class="nc" id="L64">        animation.setPlayMode(Animation.PlayMode.NORMAL);</span>
+<span class="nc" id="L65">        return animation;</span>
+    }
+
+    // call once per frame with the zombie's and the player's positions, in world pixels, and its health
+    public void update(float delta, float x, float y, float targetX, float targetY, float health) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (flinchTimer &gt; 0) flinchTimer -= delta;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (dead) {</span>
+<span class="nc" id="L72">            deathTime += delta; // corpse doesn't move or turn anymore</span>
+<span class="nc" id="L73">            return;</span>
+        }
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (hasLastPosition) {</span>
+<span class="nc" id="L77">            float dx = x - lastX;</span>
+<span class="nc" id="L78">            float dy = y - lastY;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            moving = dx * dx + dy * dy &gt; 0.01f;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (moving) walkTime += delta;</span>
+        }
+<span class="nc" id="L82">        lastX = x;</span>
+<span class="nc" id="L83">        lastY = y;</span>
+<span class="nc" id="L84">        hasLastPosition = true;</span>
+
+<span class="nc" id="L86">        angle = MathUtils.atan2(targetY - y, targetX - x) * MathUtils.radiansToDegrees; // always facing the player</span>
+
+        // health went down = he got shot, blood sprays out the back, away from the player
+<span class="nc bnc" id="L89" title="All 4 branches missed.">        if (lastHealth &gt;= 0 &amp;&amp; health &lt; lastHealth) {</span>
+<span class="nc" id="L90">            blood.spawn(x, y, angle + 180);</span>
+<span class="nc" id="L91">            flinchTimer = FLINCH_TIME;</span>
+        }
+<span class="nc" id="L93">        lastHealth = health;</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (health &lt;= 0) {</span>
+<span class="nc" id="L96">            dead = true; // death anim starts, he stays where he fell</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            death = MathUtils.random() &lt; RARE_DEATH_CHANCE ? rareDeath : commonDeath; // which death this time</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            headPopPending = death == rareDeath; // the rare one comes with the head pop</span>
+<span class="nc" id="L99">            flinchTimer = 0; // no knock back on the corpse, the anim does the fall</span>
+        }
+<span class="nc" id="L101">    }</span>
+
+    public boolean isDead() {
+<span class="nc" id="L104">        return dead;</span>
+    }
+
+    // true once, 1 s after a rare death, that's when the head pop sound should play
+    public boolean headPopNow() {
+<span class="nc bnc" id="L109" title="All 4 branches missed.">        if (!headPopPending || deathTime &lt; HEAD_POP_DELAY) return false;</span>
+<span class="nc" id="L110">        headPopPending = false;</span>
+<span class="nc" id="L111">        return true;</span>
+    }
+
+    // where he is (or where the corpse lies), in world pixels
+    public float getX() {
+<span class="nc" id="L116">        return lastX;</span>
+    }
+
+    public float getY() {
+<span class="nc" id="L120">        return lastY;</span>
+    }
+
+    // draws at the last known position, so the corpse stays even once the body is gone
+    public void draw(SpriteBatch batch) {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (!hasLastPosition) return;</span>
+
+        TextureRegion frame;
+<span class="nc bnc" id="L128" title="All 4 branches missed.">        if (dead &amp;&amp; death != null) frame = death.getKeyFrame(deathTime);</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">        else if (moving &amp;&amp; !dead) frame = walk.getKeyFrame(walkTime);</span>
+<span class="nc" id="L130">        else frame = walk.getKeyFrames()[0]; // standing still (attacking, blocked): freeze on the first frame</span>
+
+        // knocked back a bit for a moment when hit
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        float push = flinchTimer &gt; 0 ? FLINCH : 0;</span>
+<span class="nc" id="L134">        float x = lastX - MathUtils.cosDeg(angle) * push;</span>
+<span class="nc" id="L135">        float y = lastY - MathUtils.sinDeg(angle) * push;</span>
+
+<span class="nc" id="L137">        float w = frame.getRegionWidth();</span>
+<span class="nc" id="L138">        float h = frame.getRegionHeight();</span>
+        // rotates around the center of the image
+<span class="nc" id="L140">        batch.draw(frame, Math.round(x) - w / 2f, Math.round(y) - h / 2f,</span>
+                w / 2f, h / 2f, w, h, SCALE, SCALE, angle);
+<span class="nc" id="L142">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

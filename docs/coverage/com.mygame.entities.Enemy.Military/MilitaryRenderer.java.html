@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MilitaryRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.entities.Enemy.Military</a> &gt; <span class="el_source">MilitaryRenderer.java</span></div><h1>MilitaryRenderer.java</h1><pre class="source lang-java linenums">package com.mygame.entities.Enemy.Military;
+
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.mygame.entities.others.BloodEffects;
+
+// draws a soldier: legs follow where he walks, torso and rifle always aim at the player
+public class MilitaryRenderer {
+    private static final int LEGS_FRAME_SIZE = 50; // military_legs frames are 50x50
+    private static final int TORSO_FRAME_WIDTH = 120; // military_torso frames are 120x70
+    private static final float FRAME_DURATION = 0.08f; // short quick steps, tactical
+    private static final float IDLE_FRAME_DURATION = 0.8f; // slow breathing when he stands still
+    public static final int DEATH_FRAMES = 7; // how many frames you drew in military_death.png, the width is worked out from it
+    private static final float DEATH_FRAME_DURATION = 0.1f; // speed of the fall
+    private static final float SCALE = 0.7f; // same size as oconnor
+    private static final float FLINCH = 2f; // px knocked back when hit
+    private static final float FLINCH_TIME = 0.08f; // how long the knock back lasts
+
+    private final Animation&lt;TextureRegion&gt; legs;
+    private final TextureRegion torso;
+    private final Animation&lt;TextureRegion&gt; torsoIdle; // breathing when standing, null = still torso
+    private float idleTime;
+<span class="nc" id="L26">    private boolean alert = true; // spotted the player = combat pose, for now always true until the ai exists</span>
+    private final BloodEffects blood;
+    private final Animation&lt;TextureRegion&gt; death; // null = he just disappears
+    private float deathTime;
+    private float torsoAngle; // degrees, 0 = facing right
+    private float legsAngle;
+    private float walkTime;
+    private boolean moving;
+
+    private float lastX, lastY;
+    private boolean hasLastPosition;
+
+<span class="nc" id="L38">    private float lastHealth = -1f; // to notice when he gets hit</span>
+    private float flinchTimer;
+    private boolean dead;
+    private boolean deathSoundPending; // just died, helmet headshot not played yet
+
+    public MilitaryRenderer(Animation&lt;TextureRegion&gt; legs, TextureRegion torso,
+<span class="nc" id="L44">                            Animation&lt;TextureRegion&gt; torsoIdle, Animation&lt;TextureRegion&gt; death, BloodEffects blood) {</span>
+<span class="nc" id="L45">        this.death = death;</span>
+<span class="nc" id="L46">        this.legs = legs;</span>
+<span class="nc" id="L47">        this.torso = torso;</span>
+<span class="nc" id="L48">        this.torsoIdle = torsoIdle;</span>
+<span class="nc" id="L49">        this.blood = blood;</span>
+<span class="nc" id="L50">        walkTime = MathUtils.random(0f, 1f); // so soldiers don't all step in sync</span>
+<span class="nc" id="L51">        idleTime = MathUtils.random(0f, 2f); // and don't all breathe in sync</span>
+<span class="nc" id="L52">    }</span>
+
+    // load the legs strip once and share it between all soldiers
+    public static Animation&lt;TextureRegion&gt; loadLegs(Texture texture) {
+<span class="nc" id="L56">        TextureRegion[] frames = TextureRegion.split(texture, LEGS_FRAME_SIZE, LEGS_FRAME_SIZE)[0];</span>
+<span class="nc" id="L57">        Animation&lt;TextureRegion&gt; animation = new Animation&lt;&gt;(FRAME_DURATION, frames);</span>
+<span class="nc" id="L58">        animation.setPlayMode(Animation.PlayMode.LOOP);</span>
+<span class="nc" id="L59">        return animation;</span>
+    }
+
+    // torso is a single pose for now, first frame if it's ever a strip
+    public static TextureRegion loadTorso(Texture texture) {
+<span class="nc" id="L64">        int w = Math.min(TORSO_FRAME_WIDTH, texture.getWidth());</span>
+<span class="nc" id="L65">        return new TextureRegion(texture, 0, 0, w, texture.getHeight());</span>
+    }
+
+    // plays once and stays on the last frame (the corpse)
+    public static Animation&lt;TextureRegion&gt; loadDeath(Texture texture) {
+<span class="nc" id="L70">        int w = texture.getWidth() / DEATH_FRAMES; // cuts exactly between frames</span>
+<span class="nc" id="L71">        Animation&lt;TextureRegion&gt; animation = new Animation&lt;&gt;(DEATH_FRAME_DURATION, TextureRegion.split(texture, w, texture.getHeight())[0]);</span>
+<span class="nc" id="L72">        animation.setPlayMode(Animation.PlayMode.NORMAL);</span>
+<span class="nc" id="L73">        return animation;</span>
+    }
+
+    // breathing strip, same frame size as the torso, plays back and forth
+    public static Animation&lt;TextureRegion&gt; loadTorsoIdle(Texture texture) {
+<span class="nc" id="L78">        int w = Math.min(TORSO_FRAME_WIDTH, texture.getWidth());</span>
+<span class="nc" id="L79">        Animation&lt;TextureRegion&gt; animation = new Animation&lt;&gt;(IDLE_FRAME_DURATION, TextureRegion.split(texture, w, texture.getHeight())[0]);</span>
+<span class="nc" id="L80">        animation.setPlayMode(Animation.PlayMode.LOOP_PINGPONG); // in then out, no snapping back</span>
+<span class="nc" id="L81">        return animation;</span>
+    }
+
+    // call once per frame with his and the player's positions, in world pixels, and his health
+    public void update(float delta, float x, float y, float targetX, float targetY, float health) {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (flinchTimer &gt; 0) flinchTimer -= delta;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (dead) {</span>
+<span class="nc" id="L88">            deathTime += delta; // corpse doesn't move or turn anymore</span>
+<span class="nc" id="L89">            return;</span>
+        }
+<span class="nc" id="L91">        idleTime += delta;</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (hasLastPosition) {</span>
+<span class="nc" id="L94">            float dx = x - lastX;</span>
+<span class="nc" id="L95">            float dy = y - lastY;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            moving = dx * dx + dy * dy &gt; 0.01f;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (moving) {</span>
+<span class="nc" id="L98">                legsAngle = MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees;</span>
+<span class="nc" id="L99">                walkTime += delta;</span>
+            }
+        }
+<span class="nc" id="L102">        lastX = x;</span>
+<span class="nc" id="L103">        lastY = y;</span>
+<span class="nc" id="L104">        hasLastPosition = true;</span>
+
+<span class="nc" id="L106">        torsoAngle = MathUtils.atan2(targetY - y, targetX - x) * MathUtils.radiansToDegrees; // rifle on the player</span>
+
+        // health went down = he got shot, blood sprays out the back, away from the player
+<span class="nc bnc" id="L109" title="All 4 branches missed.">        if (lastHealth &gt;= 0 &amp;&amp; health &lt; lastHealth) {</span>
+<span class="nc" id="L110">            blood.spawn(x, y, torsoAngle + 180);</span>
+<span class="nc" id="L111">            flinchTimer = FLINCH_TIME;</span>
+        }
+<span class="nc" id="L113">        lastHealth = health;</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (health &lt;= 0) {</span>
+<span class="nc" id="L116">            dead = true; // death anim starts, he stays where he fell</span>
+<span class="nc" id="L117">            deathSoundPending = true; // helmet headshot plays right away</span>
+<span class="nc" id="L118">            flinchTimer = 0; // no knock back on the corpse, the anim does the fall</span>
+        }
+<span class="nc" id="L120">    }</span>
+
+    // true once, the frame he dies, that's when the helmet headshot sound should play
+    public boolean deathSoundNow() {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (!deathSoundPending) return false;</span>
+<span class="nc" id="L125">        deathSoundPending = false;</span>
+<span class="nc" id="L126">        return true;</span>
+    }
+
+    // where he is (or where the corpse lies), in world pixels
+    public float getX() {
+<span class="nc" id="L131">        return lastX;</span>
+    }
+
+    public float getY() {
+<span class="nc" id="L135">        return lastY;</span>
+    }
+
+    // false = hasn't spotted you yet, relaxed idle pose (walking or standing)
+    public void setAlert(boolean alert) {
+<span class="nc" id="L140">        this.alert = alert;</span>
+<span class="nc" id="L141">    }</span>
+
+    public boolean isDead() {
+<span class="nc" id="L144">        return dead;</span>
+    }
+
+    public void draw(SpriteBatch batch) {
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        if (!hasLastPosition) return;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (dead) {</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            if (death != null) drawCentered(batch, death.getKeyFrame(deathTime), lastX, lastY, torsoAngle); // corpse, no legs</span>
+<span class="nc" id="L151">            return;</span>
+        }
+
+        // knocked back a bit for a moment when hit
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        float push = flinchTimer &gt; 0 ? FLINCH : 0;</span>
+<span class="nc" id="L156">        float x = lastX - MathUtils.cosDeg(torsoAngle) * push;</span>
+<span class="nc" id="L157">        float y = lastY - MathUtils.sinDeg(torsoAngle) * push;</span>
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (moving) drawCentered(batch, legs.getKeyFrame(walkTime), x, y, legsAngle); // legs hidden when standing</span>
+        // relaxed pose until he spots you, combat pose after
+<span class="nc bnc" id="L161" title="All 4 branches missed.">        TextureRegion body = (!alert &amp;&amp; torsoIdle != null) ? torsoIdle.getKeyFrame(idleTime) : torso;</span>
+<span class="nc" id="L162">        drawCentered(batch, body, x, y, torsoAngle);</span>
+<span class="nc" id="L163">    }</span>
+
+    private void drawCentered(SpriteBatch batch, TextureRegion region, float x, float y, float angle) {
+<span class="nc" id="L166">        float w = region.getRegionWidth();</span>
+<span class="nc" id="L167">        float h = region.getRegionHeight();</span>
+        // rotates around the center of the image
+<span class="nc" id="L169">        batch.draw(region, Math.round(x) - w / 2f, Math.round(y) - h / 2f,</span>
+                w / 2f, h / 2f, w, h, SCALE, SCALE, angle);
+<span class="nc" id="L171">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

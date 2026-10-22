@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Physics.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame</a> &gt; <span class="el_source">Physics.java</span></div><h1>Physics.java</h1><pre class="source lang-java linenums">package com.mygame;
+
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
+
+// Box2D helpers. Box2D works in meters, the game works in pixels: PPM converts between them. 
+public final class Physics {
+    public static final float PPM = 16f; // pixels per meter
+
+    private Physics() {}
+
+    // Creates a static wall body for every rectangle in the map's &quot;collisions&quot; object layer. 
+    public static void createWalls(World world, TiledMap map) {
+<span class="nc" id="L21">        MapLayer layer = map.getLayers().get(&quot;collisions&quot;);</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">        if (layer == null) return;</span>
+
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        for (MapObject object : layer.getObjects()) {</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">            if (!(object instanceof RectangleMapObject)) continue;</span>
+<span class="nc" id="L26">            Rectangle r = ((RectangleMapObject) object).getRectangle();</span>
+
+<span class="nc" id="L28">            BodyDef def = new BodyDef();</span>
+<span class="nc" id="L29">            def.type = BodyDef.BodyType.StaticBody;</span>
+<span class="nc" id="L30">            def.position.set((r.x + r.width / 2f) / PPM, (r.y + r.height / 2f) / PPM);</span>
+<span class="nc" id="L31">            Body body = world.createBody(def);</span>
+
+<span class="nc" id="L33">            PolygonShape shape = new PolygonShape();</span>
+<span class="nc" id="L34">            shape.setAsBox(r.width / 2f / PPM, r.height / 2f / PPM);</span>
+<span class="nc" id="L35">            body.createFixture(shape, 0f);</span>
+<span class="nc" id="L36">            shape.dispose();</span>
+<span class="nc" id="L37">        }</span>
+<span class="nc" id="L38">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

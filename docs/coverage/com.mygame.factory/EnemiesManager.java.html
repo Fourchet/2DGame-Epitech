@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnemiesManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.factory</a> &gt; <span class="el_source">EnemiesManager.java</span></div><h1>EnemiesManager.java</h1><pre class="source lang-java linenums">package com.mygame.factory;
+
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
+import com.mygame.entities.Enemy.Enemy;
+import com.mygame.entities.Enemy.Military.Military;
+import com.mygame.entities.Enemy.Zombie.Zombie;
+import com.mygame.entities.Player.Player;
+import com.mygame.items.Weapons.Weapon;
+
+<span class="fc" id="L12">public class EnemiesManager {</span>
+
+<span class="fc" id="L14">    private final Array&lt;Enemy&gt; enemies = new Array&lt;&gt;();</span>
+    // spawn enemies 
+    public Zombie spawnZombie(World world, float x, float y) {
+
+<span class="fc" id="L18">        Zombie zombie = new Zombie(world, x, y);</span>
+
+<span class="fc" id="L20">        enemies.add(zombie);</span>
+
+<span class="fc" id="L22">        return zombie;</span>
+    }
+
+    public Military spawnMilitary(World world, float x, float y, Weapon weapon, BulletManager bulletFactory){
+<span class="fc" id="L26">        Military military = new Military(world, x, y, weapon, bulletFactory);</span>
+<span class="fc" id="L27">        enemies.add(military);</span>
+<span class="fc" id="L28">        return military;</span>
+    }
+
+    public void update(Player player, float delta) {
+
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        for (Enemy enemy : enemies) {</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            if (enemy.isDead()) {</span>
+<span class="fc" id="L35">                enemy.updateDeath(delta);</span>
+<span class="fc" id="L36">                continue;</span>
+            }
+<span class="fc" id="L38">            enemy.update(player, delta);</span>
+<span class="fc" id="L39">        }</span>
+<span class="fc" id="L40">    }</span>
+
+    // draw enemies
+    public void draw(ShapeRenderer shapes) {
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        for (Enemy enemy : enemies) {</span>
+<span class="nc" id="L46">            enemy.draw(shapes);</span>
+<span class="nc" id="L47">        }</span>
+<span class="nc" id="L48">    }</span>
+
+    public void removeDeadEnemies(World world) {
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (int i = enemies.size - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L52">            Enemy enemy = enemies.get(i);</span>
+
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (enemy.canBeDisable()) {</span>
+<span class="fc" id="L55">                enemy.disableCollision();</span>
+<span class="fc" id="L56">                enemies.removeIndex(i);</span>
+            }
+        }
+<span class="fc" id="L59">    }   </span>
+
+    public Array&lt;Enemy&gt; getEnemies() {
+<span class="fc" id="L62">        return enemies;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

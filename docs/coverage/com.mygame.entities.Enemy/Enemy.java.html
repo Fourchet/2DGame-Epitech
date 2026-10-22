@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Enemy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.entities.Enemy</a> &gt; <span class="el_source">Enemy.java</span></div><h1>Enemy.java</h1><pre class="source lang-java linenums">package com.mygame.entities.Enemy;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Filter;
+import com.badlogic.gdx.physics.box2d.World;
+import com.mygame.Physics;
+import com.mygame.entities.Entity;
+import com.mygame.entities.Player.Player;
+
+public abstract class Enemy extends Entity {
+
+    private static final float SIZE = 16f;
+
+    protected float damage;
+
+<span class="fc" id="L19">    Body body = this.getBody();</span>
+<span class="fc" id="L20">    float health = this.getHealth();</span>
+
+    public Enemy(World world, float x, float y, float health, float damage) {
+<span class="fc" id="L23">      super(world, x, y, SIZE, health);</span>
+<span class="fc" id="L24">      this.damage = damage;</span>
+<span class="fc" id="L25">    }</span>
+
+  public void draw(ShapeRenderer shapes) {
+<span class="nc" id="L28">    float x = body.getPosition().x * Physics.PPM;</span>
+<span class="nc" id="L29">    float y = body.getPosition().y * Physics.PPM;</span>
+
+<span class="nc" id="L31">    shapes.setColor(Color.WHITE);</span>
+
+<span class="nc" id="L33">    shapes.rect(x - SIZE / 2f,y - SIZE / 2f, SIZE,SIZE);</span>
+<span class="nc" id="L34">  }</span>
+
+
+  // getters 
+
+  public float getDamage() {
+<span class="nc" id="L40">    return damage;</span>
+  }
+
+  // setters 
+
+  public void setDamage(int damage) {
+<span class="nc" id="L46">    this.damage = damage;</span>
+<span class="nc" id="L47">  }</span>
+  
+
+  public void disableCollision() {
+<span class="fc bfc" id="L51" title="All 2 branches covered.">    for (Fixture fixture : body.getFixtureList()) {</span>
+<span class="fc" id="L52">        Filter filter = fixture.getFilterData();</span>
+<span class="fc" id="L53">        filter.maskBits = 0;</span>
+<span class="fc" id="L54">        fixture.setFilterData(filter);</span>
+<span class="fc" id="L55">    }</span>
+<span class="fc" id="L56">  }</span>
+
+
+  
+  // abstract methods
+  public abstract void update(Player player, float delta);
+  public abstract void recoverHealth();
+  public abstract void attack(Player player);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

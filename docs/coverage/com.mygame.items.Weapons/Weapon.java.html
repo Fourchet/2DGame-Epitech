@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Weapon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.items.Weapons</a> &gt; <span class="el_source">Weapon.java</span></div><h1>Weapon.java</h1><pre class="source lang-java linenums">package com.mygame.items.Weapons;
+
+import com.mygame.items.Items;
+
+public abstract class Weapon extends Items{
+  protected String name;
+  protected float damage;
+  protected float bulletSpeed;
+  protected int maxBullets;
+  protected float reloadTime;
+<span class="fc" id="L11">  private float reloadTimer = 0f;</span>
+  protected int actualBullets;
+<span class="fc" id="L13">  protected boolean isReloading = false;</span>
+  
+  public Weapon(String name, float damage, float bulletSpeed, int maxBullets, float reloadTime){
+<span class="fc" id="L16">    super(&quot;Weapon&quot;);</span>
+<span class="fc" id="L17">    this.damage = damage;</span>
+<span class="fc" id="L18">    this.name = name;</span>
+<span class="fc" id="L19">    this.bulletSpeed = bulletSpeed;</span>
+<span class="fc" id="L20">    this.maxBullets = maxBullets;</span>
+<span class="fc" id="L21">    this.reloadTime = reloadTime;</span>
+<span class="fc" id="L22">    this.actualBullets = maxBullets;</span>
+<span class="fc" id="L23">  }</span>
+
+  public void update(float delta){
+<span class="fc bfc" id="L26" title="All 2 branches covered.">    if (!isReloading){</span>
+<span class="fc" id="L27">      return;</span>
+    }
+
+<span class="fc" id="L30">    reloadTimer -= delta;</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">      if (reloadTimer &lt;= 0f) {</span>
+<span class="fc" id="L32">          actualBullets = maxBullets;</span>
+<span class="fc" id="L33">          isReloading = false;</span>
+      }
+<span class="fc" id="L35">    }</span>
+
+  public void reduceBullet(){
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">    if (actualBullets &gt; 0){</span>
+<span class="fc" id="L39">      actualBullets -= 1;</span>
+    }
+
+    
+<span class="fc" id="L43">  }</span>
+
+  public boolean canShoot() {
+<span class="pc bpc" id="L46" title="3 of 4 branches missed.">    return actualBullets &gt; 0 &amp;&amp; !isReloading;</span>
+  }
+
+  public void Reload(){
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">    if (isReloading){</span>
+<span class="nc" id="L51">      return;</span>
+    }
+
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">    if (actualBullets == maxBullets){</span>
+<span class="nc" id="L55">      return;</span>
+    }
+
+<span class="fc" id="L58">    isReloading = true;</span>
+<span class="fc" id="L59">    reloadTimer = reloadTime;</span>
+
+<span class="fc" id="L61">  }</span>
+  
+  // getters
+  public float getDamage() {
+<span class="fc" id="L65">    return damage;</span>
+  }
+
+  public String getName() {
+<span class="nc" id="L69">    return name;</span>
+  }
+
+  public float getBulletSpeed() {
+<span class="fc" id="L73">    return bulletSpeed;</span>
+  }
+
+  public int getMaxBullets() {
+<span class="fc" id="L77">    return maxBullets;</span>
+  }
+
+  public float getReloadTime() {
+<span class="fc" id="L81">    return reloadTime;</span>
+  }
+  
+  public int getActualBullets() {
+<span class="fc" id="L85">    return actualBullets;</span>
+  }
+
+  public float getReloadTimer() {
+<span class="nc" id="L89">    return reloadTimer;</span>
+  }
+
+  public boolean getIsReloading(){
+<span class="fc" id="L93">    return isReloading;</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SoundManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.audio</a> &gt; <span class="el_source">SoundManager.java</span></div><h1>SoundManager.java</h1><pre class="source lang-java linenums">package com.mygame.audio;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
+
+// all the game's sounds in one place, missing files are skipped so they can be added one by one
+public class SoundManager {
+    private static final float HEARING_DISTANCE = 400f; // px, zombies further than this are silent
+
+<span class="nc" id="L12">    private final Array&lt;Sound&gt; loaded = new Array&lt;&gt;(); // everything to dispose</span>
+    private final Sound pistolShot;
+    private final Sound rifleShot;
+    private final Sound reloadPistol;
+    private final Sound reloadRifle;
+    private final Sound dryFire;
+    private final Sound headPop;
+    private final Sound enemyShot; // soldiers' mp5
+    private final Sound helmetHeadshot; // soldier dying
+<span class="nc" id="L21">    private final Array&lt;Sound&gt; groans = new Array&lt;&gt;(); // picked at random so it doesn't loop the same one</span>
+
+<span class="nc" id="L23">    public SoundManager() {</span>
+<span class="nc" id="L24">        pistolShot = load(&quot;sounds/pistol.wav&quot;);</span>
+<span class="nc" id="L25">        rifleShot = load(&quot;sounds/rifle.wav&quot;);</span>
+<span class="nc" id="L26">        reloadPistol = load(&quot;sounds/reload_pistol.wav&quot;);</span>
+<span class="nc" id="L27">        reloadRifle = load(&quot;sounds/reload_ak.wav&quot;);</span>
+<span class="nc" id="L28">        dryFire = load(&quot;sounds/dry_fire.wav&quot;);</span>
+<span class="nc" id="L29">        headPop = load(&quot;sounds/zombie_head_pop.wav&quot;);</span>
+<span class="nc" id="L30">        enemyShot = load(&quot;sounds/mp5sd.wav&quot;);</span>
+<span class="nc" id="L31">        helmetHeadshot = load(&quot;sounds/helmet_headshot.wav&quot;);</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        for (int i = 1; i &lt;= 3; i++) {</span>
+<span class="nc" id="L33">            Sound groan = load(&quot;sounds/zombie_groan&quot; + i + &quot;.wav&quot;);</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            if (groan != null) groans.add(groan);</span>
+        }
+<span class="nc" id="L36">    }</span>
+
+    // null if the file isn't there yet or can't be read (wrong format), the game keeps running
+    private Sound load(String path) {
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (!Gdx.files.internal(path).exists()) return null;</span>
+        try {
+<span class="nc" id="L42">            Sound sound = Gdx.audio.newSound(Gdx.files.internal(path));</span>
+<span class="nc" id="L43">            loaded.add(sound);</span>
+<span class="nc" id="L44">            return sound;</span>
+<span class="nc" id="L45">        } catch (Exception e) {</span>
+<span class="nc" id="L46">            Gdx.app.error(&quot;SoundManager&quot;, &quot;can't load &quot; + path + &quot;: &quot; + e.getMessage());</span>
+<span class="nc" id="L47">            return null;</span>
+        }
+    }
+
+    private void play(Sound sound, float volume) {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (sound == null) return;</span>
+<span class="nc" id="L53">        sound.play(volume, MathUtils.random(0.92f, 1.08f), 0f); // small pitch change so it's not robotic</span>
+<span class="nc" id="L54">    }</span>
+
+    public void playShot(boolean rifle) {
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        play(rifle ? rifleShot : pistolShot, rifle ? 0.7f : 0.6f);</span>
+<span class="nc" id="L58">    }</span>
+
+    // each gun has its own reload
+    public void playReload(boolean rifle) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        play(rifle ? reloadRifle : reloadPistol, 0.5f);</span>
+<span class="nc" id="L63">    }</span>
+
+    // clicking with an empty mag
+    public void playDryFire() {
+<span class="nc" id="L67">        play(dryFire, 0.5f);</span>
+<span class="nc" id="L68">    }</span>
+
+    // dx dy = zombie minus player, louder when close, left or right depending on where it is
+    public void playGroan(float dx, float dy) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (groans.size == 0) return;</span>
+<span class="nc" id="L73">        float distance = (float) Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (distance &gt; HEARING_DISTANCE) return;</span>
+<span class="nc" id="L75">        float volume = 0.6f * (1f - distance / HEARING_DISTANCE);</span>
+<span class="nc" id="L76">        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files</span>
+<span class="nc" id="L77">        groans.random().play(volume, MathUtils.random(0.85f, 1.05f), pan);</span>
+<span class="nc" id="L78">    }</span>
+
+    // rare death, same as the groans: louder when close, from his side
+    public void playHeadPop(float dx, float dy) {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (headPop == null) return;</span>
+<span class="nc" id="L83">        float distance = (float) Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (distance &gt; HEARING_DISTANCE) return;</span>
+<span class="nc" id="L85">        float volume = 0.8f * (1f - distance / HEARING_DISTANCE);</span>
+<span class="nc" id="L86">        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files</span>
+<span class="nc" id="L87">        headPop.play(volume, MathUtils.random(0.95f, 1.05f), pan);</span>
+<span class="nc" id="L88">    }</span>
+
+    // soldier firing, louder when close, from his side
+    public void playEnemyShot(float dx, float dy) {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (enemyShot == null) return;</span>
+<span class="nc" id="L93">        float distance = (float) Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (distance &gt; HEARING_DISTANCE) return;</span>
+<span class="nc" id="L95">        float volume = 0.6f * (1f - distance / HEARING_DISTANCE);</span>
+<span class="nc" id="L96">        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files</span>
+<span class="nc" id="L97">        enemyShot.play(volume, MathUtils.random(0.92f, 1.08f), pan); // small pitch change so bursts aren't robotic</span>
+<span class="nc" id="L98">    }</span>
+
+    // soldier killed, louder when close, from his side
+    public void playHelmetHeadshot(float dx, float dy) {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (helmetHeadshot == null) return;</span>
+<span class="nc" id="L103">        float distance = (float) Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (distance &gt; HEARING_DISTANCE) return;</span>
+<span class="nc" id="L105">        float volume = 0.8f * (1f - distance / HEARING_DISTANCE);</span>
+<span class="nc" id="L106">        float pan = MathUtils.clamp(dx / HEARING_DISTANCE, -1f, 1f); // only works on mono files</span>
+<span class="nc" id="L107">        helmetHeadshot.play(volume, MathUtils.random(0.95f, 1.05f), pan);</span>
+<span class="nc" id="L108">    }</span>
+
+    public void dispose() {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        for (Sound sound : loaded) sound.dispose();</span>
+<span class="nc" id="L112">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

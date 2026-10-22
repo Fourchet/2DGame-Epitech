@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SleepEvent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.world</a> &gt; <span class="el_source">SleepEvent.java</span></div><h1>SleepEvent.java</h1><pre class="source lang-java linenums">package com.mygame.world;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
+import com.mygame.Physics;
+import com.mygame.entities.Player.Player;
+import com.mygame.render.GameRenderer;
+import com.mygame.render.LightManager;
+
+// the bed in the &quot;events&quot; layer: press E on it, oconnor goes to sleep and wakes up when the light has changed
+// fade out -&gt; sleeping in bed at night -&gt; fade out -&gt; same but day -&gt; he gets up
+// the beds are two tile layers in tiled: &quot;bed&quot; (empty bed) and &quot;bed_sleeping&quot; (him in it), we just swap which one shows
+<span class="nc" id="L23">public class SleepEvent {</span>
+    private static final float FADE = 0.8f; // seconds to go black, same to come back
+    private static final float ASLEEP_TIME = 1.5f; // watching him sleep before the night passes
+    private static final float MORNING_TIME = 1.2f; // still in bed in the morning light before he gets up
+    private static final String EMPTY_BED_LAYER = &quot;bed&quot;;
+    private static final String SLEEPING_BED_LAYER = &quot;bed_sleeping&quot;;
+
+    // when each step ends, in seconds since E was pressed
+    private static final float BLACK_1 = FADE; // fully black, swap to the sleeping bed
+    private static final float SHOWN_1 = BLACK_1 + FADE; // back from black, asleep at night
+    private static final float HOLD_1 = SHOWN_1 + ASLEEP_TIME;
+    private static final float BLACK_2 = HOLD_1 + FADE; // fully black, the night passes
+    private static final float SHOWN_2 = BLACK_2 + FADE; // back from black, asleep in the morning
+    private static final float END = SHOWN_2 + MORNING_TIME; // he gets up
+
+<span class="nc" id="L38">    private final Array&lt;Body&gt; bodies = new Array&lt;&gt;();</span>
+<span class="nc" id="L39">    private float t = -1; // -1 = nothing going on</span>
+    private boolean asleep; // sleeping bed shown, player hidden
+    private boolean day; // lighting mode, stays across maps
+    private boolean switched; // the light already changed this sleep
+    private MapLayer emptyBed, sleepingBed;
+
+    public boolean isBusy() {
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        return t &gt;= 0;</span>
+    }
+
+    public boolean isDay() {
+<span class="nc" id="L50">        return day;</span>
+    }
+
+    public void update(float delta, Player player, World world, TiledMap map, LightManager lights, GameRenderer renderer) {
+        // the sleeping bed stays hidden until he's in it, even if it's left visible in tiled
+<span class="nc" id="L55">        MapLayer sleeping = map.getLayers().get(SLEEPING_BED_LAYER);</span>
+<span class="nc bnc" id="L56" title="All 4 branches missed.">        if (sleeping != null &amp;&amp; !asleep) sleeping.setVisible(false);</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (t &lt; 0) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">            if (!Gdx.input.isKeyJustPressed(Input.Keys.E)) return;</span>
+<span class="nc" id="L60">            float px = player.getPosition().x * Physics.PPM;</span>
+<span class="nc" id="L61">            float py = player.getPosition().y * Physics.PPM;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (!onBed(map, px, py)) return;</span>
+<span class="nc" id="L63">            emptyBed = map.getLayers().get(EMPTY_BED_LAYER);</span>
+<span class="nc" id="L64">            sleepingBed = sleeping;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            if (sleepingBed == null) Gdx.app.log(&quot;SleepEvent&quot;, &quot;no \&quot;&quot; + SLEEPING_BED_LAYER + &quot;\&quot; layer, sleeping without the bed swap&quot;);</span>
+<span class="nc" id="L66">            asleep = false;</span>
+<span class="nc" id="L67">            switched = false;</span>
+<span class="nc" id="L68">            t = 0;</span>
+        }
+
+<span class="nc" id="L71">        stopPlayer(player, world); // no sliding around while he sleeps</span>
+<span class="nc" id="L72">        t += delta;</span>
+
+<span class="nc bnc" id="L74" title="All 4 branches missed.">        if (!asleep &amp;&amp; t &gt;= BLACK_1) {</span>
+<span class="nc" id="L75">            asleep = true;</span>
+<span class="nc" id="L76">            renderer.setPlayerVisible(false); // he's in the bed now</span>
+<span class="nc" id="L77">            setPlayerActive(player, world, false); // his body stops blocking light, no shadow on the bed</span>
+<span class="nc" id="L78">            showSleeping(true);</span>
+        }
+<span class="nc bnc" id="L80" title="All 4 branches missed.">        if (!switched &amp;&amp; t &gt;= BLACK_2) {</span>
+<span class="nc" id="L81">            switched = true;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            day = !day; // sleeping again at day brings the night back</span>
+<span class="nc" id="L83">            lights.setDay(day);</span>
+        }
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (t &gt;= END) {</span>
+<span class="nc" id="L86">            asleep = false;</span>
+<span class="nc" id="L87">            renderer.setPlayerVisible(true); // up, standing where he was</span>
+<span class="nc" id="L88">            setPlayerActive(player, world, true);</span>
+<span class="nc" id="L89">            showSleeping(false);</span>
+<span class="nc" id="L90">            t = -1;</span>
+        }
+<span class="nc" id="L92">    }</span>
+
+    private void showSleeping(boolean sleeping) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (sleepingBed == null) return;</span>
+<span class="nc" id="L96">        sleepingBed.setVisible(sleeping);</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">        if (emptyBed != null) emptyBed.setVisible(!sleeping);</span>
+<span class="nc" id="L98">    }</span>
+
+    // standing in a rectangle named &quot;bed&quot; in the events layer
+    private boolean onBed(TiledMap map, float x, float y) {
+<span class="nc" id="L102">        MapLayer layer = map.getLayers().get(&quot;events&quot;);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (layer == null) return false;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        for (MapObject object : layer.getObjects()) {</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">            if (!&quot;bed&quot;.equals(object.getName()) || !(object instanceof RectangleMapObject)) continue;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (((RectangleMapObject) object).getRectangle().contains(x, y)) return true;</span>
+<span class="nc" id="L107">        }</span>
+<span class="nc" id="L108">        return false;</span>
+    }
+
+    // the player's body is the one with him as userData
+    private void stopPlayer(Player player, World world) {
+<span class="nc" id="L113">        world.getBodies(bodies);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (Body body : bodies) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (body.getUserData() == player) body.setLinearVelocity(0, 0);</span>
+<span class="nc" id="L116">        }</span>
+<span class="nc" id="L117">    }</span>
+
+    // inactive body = not in the physics world at all, no collisions and no shadows
+    private void setPlayerActive(Player player, World world, boolean active) {
+<span class="nc" id="L121">        world.getBodies(bodies);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for (Body body : bodies) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (body.getUserData() == player) body.setActive(active);</span>
+<span class="nc" id="L124">        }</span>
+<span class="nc" id="L125">    }</span>
+
+    // black amount, 0 = see everything, 1 = black screen
+    private float fade() {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (t &lt; 0) return 0;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (t &lt; BLACK_1) return t / FADE;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (t &lt; SHOWN_1) return 1 - (t - BLACK_1) / FADE;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (t &lt; HOLD_1) return 0;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (t &lt; BLACK_2) return (t - HOLD_1) / FADE;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (t &lt; SHOWN_2) return 1 - (t - BLACK_2) / FADE;</span>
+<span class="nc" id="L135">        return 0;</span>
+    }
+
+    // call after lightManager.render(), black over everything
+    public void drawFade(ShapeRenderer shapes, OrthographicCamera camera) {
+<span class="nc" id="L140">        float a = fade();</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (a &lt;= 0) return;</span>
+<span class="nc" id="L142">        float w = camera.viewportWidth * camera.zoom + 20; // a bit bigger than the screen so no edge shows</span>
+<span class="nc" id="L143">        float h = camera.viewportHeight * camera.zoom + 20;</span>
+<span class="nc" id="L144">        Gdx.gl.glEnable(GL20.GL_BLEND);</span>
+<span class="nc" id="L145">        shapes.setProjectionMatrix(camera.combined);</span>
+<span class="nc" id="L146">        shapes.begin(ShapeRenderer.ShapeType.Filled);</span>
+<span class="nc" id="L147">        shapes.setColor(0, 0, 0, Math.min(1, a));</span>
+<span class="nc" id="L148">        shapes.rect(camera.position.x - w / 2f, camera.position.y - h / 2f, w, h);</span>
+<span class="nc" id="L149">        shapes.end();</span>
+<span class="nc" id="L150">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LightManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.render</a> &gt; <span class="el_source">LightManager.java</span></div><h1>LightManager.java</h1><pre class="source lang-java linenums">package com.mygame.render;
+
+import box2dLight.ConeLight;
+import box2dLight.DirectionalLight;
+import box2dLight.Light;
+import box2dLight.PointLight;
+import box2dLight.RayHandler;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.maps.objects.PolygonMapObject;
+import com.badlogic.gdx.maps.objects.PolylineMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygame.Physics;
+
+// darkness + lights for one map, everything comes from the tiled &quot;lights&quot; layer
+// walls block the light so they cast real shadows
+public class LightManager {
+<span class="nc" id="L29">    private static final Color DEFAULT_AMBIENT = new Color(0.1f, 0.08f, 0.12f, 0.35f); // map with no &quot;ambient&quot; property: dim evening</span>
+<span class="nc" id="L30">    private static final Color DEFAULT_DAY = new Color(1f, 0.85f, 0.6f, 0.95f); // map with no &quot;dayAmbient&quot; property: warm morning</span>
+    private static final float DAY_TINT = 0.06f; // how much of the day colour gets added on top, more = washed out
+<span class="nc" id="L32">    private static final Color DEFAULT_LAMP = new Color(1f, 0.75f, 0.45f, 0.85f); // warm bulb</span>
+<span class="nc" id="L33">    private static final Color DEFAULT_SUN = new Color(1f, 0.9f, 0.7f, 0.6f); // late afternoon sun</span>
+    private static final float DEFAULT_RADIUS = 120f; // px
+    private static final float CONE_EXTRA_ANGLE = 12f; // degrees added on each side, the edges are dim so it looked too tight
+    private static final float CONE_EXTRA_LENGTH = 1.4f; // light fades to nothing at its end, so it goes a bit past your shape
+    private static final float DARKNESS = 1f; // whole map without lights, lower = darker (1 = exactly the map's ambient)
+    private static final float LAMP_STRENGTH = 0.6f; // every lamp, cone and tv, lower = dimmer and less washed out (gun flashes not included)
+<span class="nc" id="L39">    private static final Color FLASH_COLOR = new Color(1f, 0.82f, 0.5f, 1f); // gunpowder orange, full strength</span>
+    private static final float FLASH_RADIUS_MIN = 240f; // px, each flash picks a range in between
+    private static final float FLASH_RADIUS_MAX = 320f; // about 5-8 m at our characters scale, like source engine muzzle flashes
+    private static final float FLASH_TIME_MIN = 0.05f; // seconds, each flash picks a length in between
+    private static final float FLASH_TIME_MAX = 0.1f;
+    private static final int FLASH_POOL = 8; // max flashes at once, enough for bursts
+    private static final float FLASH_CONE_MIN = 45f; // half angle, each flash picks a wideness in between
+    private static final float FLASH_CONE_MAX = 75f; // 60 = 120 degrees in front of the barrel, nothing behind
+    private static final float MIN_SHAPE_RADIUS = 32f; // smaller ellipses just mark where the lamp is, they get the default radius
+    private static final int LAMP_RAYS = 128; // more = smoother shadows, slower
+    private static final int SUN_RAYS = 512;
+<span class="nc" id="L50">    private static final Color[] TV_COLORS = { // what's on screen changes, the room changes colour with it</span>
+            new Color(0.55f, 0.7f, 1f, 0.8f), new Color(0.8f, 0.85f, 1f, 0.9f),
+            new Color(0.4f, 0.55f, 0.95f, 0.6f), new Color(0.9f, 0.8f, 0.7f, 0.75f)};
+
+    private final RayHandler rayHandler;
+<span class="nc" id="L55">    private final Matrix4 lightMatrix = new Matrix4(); // camera matrix but in meters</span>
+<span class="nc" id="L56">    private final Array&lt;Light&gt; flickering = new Array&lt;&gt;();</span>
+<span class="nc" id="L57">    private final Array&lt;Float&gt; flickerRadius = new Array&lt;&gt;(); // their normal size</span>
+<span class="nc" id="L58">    private final Array&lt;Light&gt; tvs = new Array&lt;&gt;();</span>
+<span class="nc" id="L59">    private final Array&lt;Float&gt; tvTimers = new Array&lt;&gt;(); // time until the next &quot;scene cut&quot;</span>
+<span class="nc" id="L60">    private final Array&lt;Color&gt; tvColors = new Array&lt;&gt;(); // the colour you gave it in tiled</span>
+    private float time;
+    private Color nightAmbient, dayAmbient;
+<span class="nc" id="L63">    private final Array&lt;Light&gt; nightOnly = new Array&lt;&gt;(); // lamps switched off in the day</span>
+<span class="nc" id="L64">    private final Array&lt;ConeLight&gt; flashes = new Array&lt;&gt;(); // reused muzzle flash lights</span>
+<span class="nc" id="L65">    private final float[] flashTimers = new float[FLASH_POOL];</span>
+<span class="nc" id="L66">    private final float[] flashDurations = new float[FLASH_POOL]; // how long this one lasts</span>
+<span class="nc" id="L67">    private final float[] flashRadius = new float[FLASH_POOL]; // how far this one reaches, in meters</span>
+
+<span class="nc" id="L69">    public LightManager(World world, TiledMap map, Viewport viewport) {</span>
+<span class="nc" id="L70">        RayHandler.useDiffuseLight(false); // back to the darker look from before</span>
+<span class="nc" id="L71">        rayHandler = new RayHandler(world);</span>
+<span class="nc" id="L72">        rayHandler.setBlurNum(2); // soft edges</span>
+        // ambient alpha = how bright the map is without lights, DARKNESS on top to tune every map at once
+<span class="nc" id="L74">        Color a = readColor(map.getProperties(), &quot;ambient&quot;, DEFAULT_AMBIENT);</span>
+<span class="nc" id="L75">        nightAmbient = new Color(a.r, a.g, a.b, a.a * DARKNESS);</span>
+        // the ambient colour gets added over the whole screen, so only a touch of it or the day goes white
+        // alpha = how bright the day is, 1 = the art at full brightness
+<span class="nc" id="L78">        Color d = readColor(map.getProperties(), &quot;dayAmbient&quot;, DEFAULT_DAY);</span>
+<span class="nc" id="L79">        dayAmbient = new Color(d.r * DAY_TINT, d.g * DAY_TINT, d.b * DAY_TINT, d.a);</span>
+<span class="nc" id="L80">        rayHandler.setAmbientLight(nightAmbient);</span>
+<span class="nc" id="L81">        resize(viewport);</span>
+
+        // muzzle flash lights made once and reused, off until someone shoots
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        for (int i = 0; i &lt; FLASH_POOL; i++) {</span>
+<span class="nc" id="L85">            ConeLight flash = new ConeLight(rayHandler, 64, FLASH_COLOR, FLASH_RADIUS_MAX / Physics.PPM, 0, 0, 0, FLASH_CONE_MAX);</span>
+<span class="nc" id="L86">            flash.setActive(false);</span>
+<span class="nc" id="L87">            flashes.add(flash);</span>
+        }
+
+<span class="nc" id="L90">        MapLayer layer = map.getLayers().get(&quot;lights&quot;);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (layer == null) return; // no lights layer = just the ambient</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        for (MapObject object : layer.getObjects()) {</span>
+<span class="nc" id="L94">            MapProperties p = object.getProperties();</span>
+<span class="nc" id="L95">            float w = num(p, &quot;width&quot;, 0f);</span>
+<span class="nc" id="L96">            float h = num(p, &quot;height&quot;, 0f);</span>
+<span class="nc" id="L97">            float x = num(p, &quot;x&quot;, 0f) + w / 2f; // center of the object, in px</span>
+<span class="nc" id="L98">            float y = num(p, &quot;y&quot;, 0f) + h / 2f;</span>
+
+            // object named &quot;sun&quot;: lights the whole map from one direction
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if (&quot;sun&quot;.equals(object.getName())) {</span>
+<span class="nc" id="L102">                float angle = num(p, &quot;angle&quot;, -60f); // where the light goes, -90 = straight down the screen</span>
+<span class="nc" id="L103">                new DirectionalLight(rayHandler, SUN_RAYS, readColor(p, &quot;color&quot;, DEFAULT_SUN), angle);</span>
+<span class="nc" id="L104">                continue;</span>
+            }
+
+<span class="nc" id="L107">            Color tiledColor = readColor(p, &quot;color&quot;, DEFAULT_LAMP);</span>
+<span class="nc" id="L108">            Color color = new Color(tiledColor.r, tiledColor.g, tiledColor.b, tiledColor.a * LAMP_STRENGTH);</span>
+            Light light;
+            float radius;
+
+            // polygon or polyline: a cone of light (tv, car headlights...), the first point you clicked is where it comes from
+<span class="nc" id="L113">            float[] v = null;</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (object instanceof PolygonMapObject) v = ((PolygonMapObject) object).getPolygon().getTransformedVertices();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            else if (object instanceof PolylineMapObject) v = ((PolylineMapObject) object).getPolyline().getTransformedVertices();</span>
+
+<span class="nc bnc" id="L117" title="All 4 branches missed.">            if (v != null &amp;&amp; v.length &gt;= 6) {</span>
+                // points close to the first one are the source edge (like both corners of a tv screen),
+                // the light comes from their middle, the others are where it shines to
+<span class="nc" id="L120">                float reach = 0;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                for (int i = 2; i &lt; v.length; i += 2) reach = Math.max(reach, dist(v[0], v[1], v[i], v[i + 1]));</span>
+<span class="nc" id="L122">                float ax = 0, ay = 0, cx = 0, cy = 0;</span>
+<span class="nc" id="L123">                int sources = 0, targets = 0;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                for (int i = 0; i &lt; v.length; i += 2) {</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">                    if (i == 0 || dist(v[0], v[1], v[i], v[i + 1]) &lt; reach * 0.3f) {</span>
+<span class="nc" id="L126">                        ax += v[i]; ay += v[i + 1]; sources++;</span>
+                    } else {
+<span class="nc" id="L128">                        cx += v[i]; cy += v[i + 1]; targets++;</span>
+                    }
+                }
+<span class="nc" id="L131">                ax /= sources; ay /= sources;</span>
+<span class="nc" id="L132">                cx /= targets; cy /= targets;</span>
+<span class="nc" id="L133">                float direction = MathUtils.atan2(cy - ay, cx - ax) * MathUtils.radiansToDegrees; // aims at the middle of the targets</span>
+                // wide enough to reach every target, long enough to reach the furthest
+<span class="nc" id="L135">                float halfAngle = 0, far = 0;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                for (int i = 2; i &lt; v.length; i += 2) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                    if (dist(v[0], v[1], v[i], v[i + 1]) &lt; reach * 0.3f) continue; // part of the source</span>
+<span class="nc" id="L138">                    float angle = MathUtils.atan2(v[i + 1] - ay, v[i] - ax) * MathUtils.radiansToDegrees;</span>
+<span class="nc" id="L139">                    float diff = Math.abs(((angle - direction) % 360 + 540) % 360 - 180);</span>
+<span class="nc" id="L140">                    halfAngle = Math.max(halfAngle, diff);</span>
+<span class="nc" id="L141">                    far = Math.max(far, dist(ax, ay, v[i], v[i + 1]));</span>
+                }
+<span class="nc" id="L143">                halfAngle = Math.min(halfAngle + CONE_EXTRA_ANGLE, 180f);</span>
+<span class="nc" id="L144">                radius = num(p, &quot;radius&quot;, far * CONE_EXTRA_LENGTH);</span>
+<span class="nc" id="L145">                light = new ConeLight(rayHandler, LAMP_RAYS, color, radius / Physics.PPM,</span>
+                        ax / Physics.PPM, ay / Physics.PPM, direction, halfAngle);
+<span class="nc" id="L147">                Gdx.app.log(&quot;LightManager&quot;, &quot;cone '&quot; + object.getName() + &quot;' from &quot; + (int) ax + &quot;,&quot; + (int) ay</span>
+                        + &quot; aiming &quot; + (int) direction + &quot; deg, width &quot; + (int) (halfAngle * 2) + &quot; deg, length &quot; + (int) radius + &quot; color &quot; + color);
+<span class="nc" id="L149">            } else {</span>
+                // anything else is a round lamp, radius from the property, or from the ellipse if it's drawn big
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                radius = num(p, &quot;radius&quot;, w / 2f &gt;= MIN_SHAPE_RADIUS ? w / 2f : DEFAULT_RADIUS);</span>
+<span class="nc" id="L152">                light = new PointLight(rayHandler, LAMP_RAYS, color,</span>
+                        radius / Physics.PPM, x / Physics.PPM, y / Physics.PPM);
+<span class="nc" id="L154">                Gdx.app.log(&quot;LightManager&quot;, &quot;lamp '&quot; + object.getName() + &quot;' at &quot; + (int) x + &quot;,&quot; + (int) y</span>
+                        + &quot; radius &quot; + (int) radius + &quot; color &quot; + color); // to check every lamp got loaded right
+            }
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            if (bool(p, &quot;flicker&quot;)) {</span>
+<span class="nc" id="L159">                flickering.add(light);</span>
+<span class="nc" id="L160">                flickerRadius.add(radius / Physics.PPM);</span>
+            }
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            if (bool(p, &quot;tv&quot;)) {</span>
+<span class="nc" id="L163">                tvs.add(light);</span>
+<span class="nc" id="L164">                tvTimers.add(0f);</span>
+<span class="nc" id="L165">                tvColors.add(new Color(tiledColor));</span>
+            }
+<span class="nc bnc" id="L167" title="All 4 branches missed.">            if (!bool(p, &quot;tv&quot;) &amp;&amp; !bool(p, &quot;dayOn&quot;)) nightOnly.add(light); // lamps go off in the day, tv and dayOn ones stay</span>
+<span class="nc" id="L168">        }</span>
+<span class="nc" id="L169">    }</span>
+
+    // day = bright ambient and lamps off, night = back to the map's ambient and lamps on
+    public void setDay(boolean day) {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        rayHandler.setAmbientLight(day ? dayAmbient : nightAmbient);</span>
+<span class="nc bnc" id="L174" title="All 4 branches missed.">        for (Light light : nightOnly) light.setActive(!day);</span>
+<span class="nc" id="L175">    }</span>
+
+    // number property, int or float in tiled both work
+    private static float num(MapProperties p, String key, float fallback) {
+<span class="nc" id="L179">        Object value = p.get(key);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        if (value instanceof Number) return ((Number) value).floatValue();</span>
+        try {
+<span class="nc" id="L182">            return Float.parseFloat(String.valueOf(value).trim()); // typed as a string in tiled, still works</span>
+<span class="nc" id="L183">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L184">            return fallback;</span>
+        }
+    }
+
+    private static float dist(float x1, float y1, float x2, float y2) {
+<span class="nc" id="L189">        return (float) Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));</span>
+    }
+
+    // bool property, a real bool or the text &quot;true&quot; both work
+    private static boolean bool(MapProperties p, String key) {
+<span class="nc" id="L194">        Object value = p.get(key);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        return value instanceof Boolean ? (Boolean) value : &quot;true&quot;.equalsIgnoreCase(String.valueOf(value).trim());</span>
+    }
+
+    // tiled color property, works whether libgdx gives a Color or the &quot;#AARRGGBB&quot; string
+    private static Color readColor(MapProperties p, String key, Color fallback) {
+<span class="nc" id="L200">        Object value = p.get(key);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (value instanceof Color) return (Color) value;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (!(value instanceof String)) return fallback;</span>
+<span class="nc" id="L203">        String hex = ((String) value).replace(&quot;#&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (hex.length() == 8) hex = hex.substring(2) + hex.substring(0, 2); // tiled puts alpha first, libgdx last</span>
+<span class="nc" id="L205">        return Color.valueOf(hex);</span>
+    }
+
+    // call after gameRenderer.render() with its muzzle flashes, they light up next frame
+    public void flash(Array&lt;Vector3&gt; shots) {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        for (Vector3 shot : shots) {</span>
+            // the one with the least time left gets reused
+<span class="nc" id="L212">            int pick = 0;</span>
+<span class="nc bnc" id="L213" title="All 4 branches missed.">            for (int i = 1; i &lt; FLASH_POOL; i++) if (flashTimers[i] &lt; flashTimers[pick]) pick = i;</span>
+<span class="nc" id="L214">            flashDurations[pick] = MathUtils.random(FLASH_TIME_MIN, FLASH_TIME_MAX);</span>
+<span class="nc" id="L215">            flashTimers[pick] = flashDurations[pick];</span>
+<span class="nc" id="L216">            ConeLight flash = flashes.get(pick);</span>
+<span class="nc" id="L217">            flash.setPosition(shot.x / Physics.PPM, shot.y / Physics.PPM);</span>
+<span class="nc" id="L218">            flash.setDirection(shot.z); // z = where the bullet goes</span>
+            // every shot a bit different
+<span class="nc" id="L220">            flashRadius[pick] = MathUtils.random(FLASH_RADIUS_MIN, FLASH_RADIUS_MAX) / Physics.PPM;</span>
+<span class="nc" id="L221">            flash.setConeDegree(MathUtils.random(FLASH_CONE_MIN, FLASH_CONE_MAX));</span>
+<span class="nc" id="L222">            flash.setDistance(flashRadius[pick]);</span>
+<span class="nc" id="L223">            flash.setActive(true);</span>
+<span class="nc" id="L224">        }</span>
+<span class="nc" id="L225">    }</span>
+
+    // call before postProcess.begin(), computes the rays and the light texture
+    public void update(float delta, OrthographicCamera camera) {
+<span class="nc" id="L229">        time += delta;</span>
+        // flashes shrink a little then cut off
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        for (int i = 0; i &lt; FLASH_POOL; i++) {</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            if (flashTimers[i] &lt;= 0) continue;</span>
+<span class="nc" id="L233">            flashTimers[i] -= delta;</span>
+<span class="nc" id="L234">            ConeLight flash = flashes.get(i);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            if (flashTimers[i] &lt;= 0) flash.setActive(false);</span>
+<span class="nc" id="L236">            else flash.setDistance(flashRadius[i] * (0.75f + 0.25f * flashTimers[i] / flashDurations[i])); // stays big till it cuts</span>
+        }
+        // dying bulbs, a bit of wobble plus a random dip now and then
+<span class="nc bnc" id="L239" title="All 2 branches missed.">        for (int i = 0; i &lt; flickering.size; i++) {</span>
+<span class="nc" id="L240">            float wobble = 1f + 0.04f * MathUtils.sin(time * 13f + i * 7f);</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (MathUtils.random() &lt; 0.02f) wobble *= 0.6f;</span>
+<span class="nc" id="L242">            flickering.get(i).setDistance(flickerRadius.get(i) * wobble);</span>
+        }
+        // tv: jumps to another colour and brightness every now and then
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        for (int i = 0; i &lt; tvs.size; i++) {</span>
+<span class="nc" id="L246">            float timer = tvTimers.get(i) - delta;</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">            if (timer &lt;= 0) {</span>
+                // mostly your colour getting brighter and darker, sometimes a different scene
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                Color c = MathUtils.random() &lt; 0.3f ? TV_COLORS[MathUtils.random(TV_COLORS.length - 1)] : tvColors.get(i);</span>
+<span class="nc" id="L250">                tvs.get(i).setColor(c.r, c.g, c.b, c.a * LAMP_STRENGTH * MathUtils.random(0.55f, 1f));</span>
+<span class="nc" id="L251">                timer = MathUtils.random(0.15f, 1.5f);</span>
+            }
+<span class="nc" id="L253">            tvTimers.set(i, timer);</span>
+        }
+<span class="nc" id="L255">        lightMatrix.set(camera.combined).scale(Physics.PPM, Physics.PPM, 1f);</span>
+<span class="nc" id="L256">        rayHandler.setCombinedMatrix(lightMatrix);</span>
+<span class="nc" id="L257">        rayHandler.update();</span>
+<span class="nc" id="L258">        rayHandler.prepareRender(); // done outside the filter texture so they don't fight over it</span>
+<span class="nc" id="L259">    }</span>
+
+    // call right after gameRenderer.render(), darkness and lights over everything
+    public void render() {
+<span class="nc" id="L263">        Gdx.gl.glEnable(GL20.GL_BLEND); // batch.end() turns blending off, without it the lights paint over the whole game</span>
+<span class="nc" id="L264">        rayHandler.renderOnly();</span>
+<span class="nc" id="L265">    }</span>
+
+    // same black bars as the game view, call on window resize
+    public void resize(Viewport viewport) {
+<span class="nc" id="L269">        rayHandler.useCustomViewport(viewport.getScreenX(), viewport.getScreenY(),</span>
+<span class="nc" id="L270">                viewport.getScreenWidth(), viewport.getScreenHeight());</span>
+<span class="nc" id="L271">    }</span>
+
+    public void dispose() {
+<span class="nc" id="L274">        rayHandler.dispose(); // also removes all its lights</span>
+<span class="nc" id="L275">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

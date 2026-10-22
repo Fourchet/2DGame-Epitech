@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MapManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.world</a> &gt; <span class="el_source">MapManager.java</span></div><h1>MapManager.java</h1><pre class="source lang-java linenums">package com.mygame.world;
+
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
+import com.mygame.Physics;
+import com.mygame.collisions.GameContactListener;
+
+<span class="nc" id="L11">public class MapManager {</span>
+    private TiledMap map;
+    private OrthogonalTiledMapRenderer mapRenderer;
+    private String currentMap;
+    private float mapWidth;
+    private float mapHeight;
+    private World world;
+
+    //physics stuff
+    public void loadMap(String fileName) {
+<span class="nc bnc" id="L21" title="All 2 branches missed.">        if (map != null) map.dispose();</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">        if (world != null) world.dispose();</span>
+
+<span class="nc" id="L24">        map = new TmxMapLoader().load(fileName);</span>
+<span class="nc" id="L25">        currentMap = fileName;</span>
+
+<span class="nc" id="L27">        int tileW = map.getProperties().get(&quot;tilewidth&quot;, Integer.class);</span>
+<span class="nc" id="L28">        int tileH = map.getProperties().get(&quot;tileheight&quot;, Integer.class);</span>
+<span class="nc" id="L29">        mapWidth = map.getProperties().get(&quot;width&quot;, Integer.class) * tileW;</span>
+<span class="nc" id="L30">        mapHeight = map.getProperties().get(&quot;height&quot;, Integer.class) * tileH;</span>
+
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if (mapRenderer == null) {</span>
+<span class="nc" id="L33">            mapRenderer = new OrthogonalTiledMapRenderer(map);</span>
+        } else {
+<span class="nc" id="L35">            mapRenderer.setMap(map);</span>
+        }
+
+<span class="nc" id="L38">        world = new World(new Vector2(0, 0), true);</span>
+<span class="nc" id="L39">        world.setContactListener(new GameContactListener());</span>
+<span class="nc" id="L40">        Physics.createWalls(world, map);</span>
+<span class="nc" id="L41">    }</span>
+
+    public TiledMap getMap() {
+<span class="nc" id="L44">        return map;</span>
+    }
+
+    public OrthogonalTiledMapRenderer getMapRenderer() {
+<span class="nc" id="L48">        return mapRenderer;</span>
+    }
+
+    public World getWorld() {
+<span class="nc" id="L52">        return world;</span>
+    }
+
+    public float getMapWidth() {
+<span class="nc" id="L56">        return mapWidth;</span>
+    }
+
+    public float getMapHeight() {
+<span class="nc" id="L60">        return mapHeight;</span>
+    }
+
+    public String getCurrentMap() {
+<span class="nc" id="L64">        return currentMap;</span>
+    }
+
+    public void dispose() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (mapRenderer != null) mapRenderer.dispose();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (map != null) map.dispose();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (world != null) world.dispose();</span>
+<span class="nc" id="L71">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

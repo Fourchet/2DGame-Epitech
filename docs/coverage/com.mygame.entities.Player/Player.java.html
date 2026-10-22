@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Player.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.entities.Player</a> &gt; <span class="el_source">Player.java</span></div><h1>Player.java</h1><pre class="source lang-java linenums">package com.mygame.entities.Player;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.World;
+import com.mygame.Physics;
+import com.mygame.entities.Entity;
+import com.mygame.factory.BulletManager;
+import com.mygame.items.Weapons.Weapon;
+import com.mygame.system.BulletOwner;
+
+public class Player extends Entity {
+
+    private static final float SPEED = 120f;
+    private static final float SIZE = 16f;
+
+<span class="fc" id="L19">    private final Vector2 direction = new Vector2();</span>
+    private Weapon weapon;
+
+<span class="fc" id="L22">    Body body = this.getBody();</span>
+<span class="fc" id="L23">    float health = this.getHealth();</span>
+    
+    public Player(World world, float x, float y, Weapon weapon) {
+<span class="fc" id="L26">        super(world, x, y, SIZE, 250f);</span>
+
+<span class="fc" id="L28">        this.weapon = weapon;</span>
+<span class="fc" id="L29">    }</span>
+
+    public void update(Vector2 mousePosition, World world,BulletManager bulletManager, float delta) {
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if (weapon != null){</span>
+<span class="nc" id="L33">            weapon.update(delta);</span>
+        }
+
+<span class="nc" id="L36">        direction.setZero();</span>
+        
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (Gdx.input.isKeyPressed(Input.Keys.W)) {</span>
+<span class="nc" id="L39">            direction.y += 1;</span>
+        }
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (Gdx.input.isKeyPressed(Input.Keys.S)) {</span>
+<span class="nc" id="L43">            direction.y -= 1;</span>
+        }
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (Gdx.input.isKeyPressed(Input.Keys.A)) {</span>
+<span class="nc" id="L47">            direction.x -= 1;</span>
+        }
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (Gdx.input.isKeyPressed(Input.Keys.D)) {</span>
+<span class="nc" id="L51">            direction.x += 1;</span>
+        }
+
+        // shoot
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {</span>
+<span class="nc" id="L56">            this.shoot(mousePosition, this.weapon, bulletManager, world);</span>
+<span class="nc" id="L57">            System.out.println(&quot;Left is pressed&quot;);</span>
+        }
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (!direction.isZero()) {</span>
+<span class="nc" id="L61">            direction.nor();</span>
+
+<span class="nc" id="L63">            body.setLinearVelocity(</span>
+                    direction.x * SPEED / Physics.PPM,
+                    direction.y * SPEED / Physics.PPM);
+        } else {
+<span class="nc" id="L67">            body.setLinearVelocity(0, 0);</span>
+        }
+<span class="nc" id="L69">    }</span>
+
+
+    public void shoot(Vector2 target,Weapon weapon,BulletManager bulletManager, World world) {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (weapon == null ){</span>
+<span class="nc" id="L74">            return;</span>
+        }
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (!weapon.canShoot()){</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (weapon.getActualBullets() == 0){</span>
+<span class="nc" id="L79">                weapon.Reload();</span>
+            }
+<span class="nc" id="L81">            return;</span>
+        }
+
+<span class="nc" id="L84">        float playerX = body.getPosition().x * Physics.PPM;</span>
+<span class="nc" id="L85">        float playerY = body.getPosition().y * Physics.PPM;</span>
+<span class="nc" id="L86">        Vector2 shootDirection = new Vector2(target.x - playerX, target.y - playerY).nor();</span>
+<span class="nc" id="L87">        float bulletSpawnOffset = 12f;</span>
+<span class="nc" id="L88">        float spawnX = playerX + shootDirection.x * bulletSpawnOffset;</span>
+<span class="nc" id="L89">        float spawnY = playerY + shootDirection.y * bulletSpawnOffset;</span>
+
+<span class="nc" id="L91">        bulletManager.generateBullet(world, spawnX, spawnY, shootDirection, weapon.getBulletSpeed(), weapon.getDamage(), BulletOwner.PLAYER, this.weapon);</span>
+<span class="nc" id="L92">    }  </span>
+
+    // setters 
+
+    public void setWeapon(Weapon weapon) {
+<span class="nc" id="L97">      this.weapon = weapon;</span>
+<span class="nc" id="L98">    }</span>
+
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

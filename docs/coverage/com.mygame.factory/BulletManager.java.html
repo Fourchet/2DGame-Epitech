@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BulletManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.factory</a> &gt; <span class="el_source">BulletManager.java</span></div><h1>BulletManager.java</h1><pre class="source lang-java linenums">package com.mygame.factory;
+
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
+import com.mygame.entities.others.Bullet;
+import com.mygame.items.Weapons.Weapon;
+import com.mygame.system.BulletOwner;
+
+<span class="fc" id="L11">public class BulletManager {</span>
+<span class="fc" id="L12">  private final Array&lt;Bullet&gt; bulletsArray = new Array&lt;Bullet&gt;();</span>
+
+  public void generateBullet(World world,float x,float y, Vector2 direction,float speed,float damage, BulletOwner owner, Weapon weapon){
+<span class="fc" id="L15">    Bullet bullet = new Bullet(world, x, y, direction, speed, damage, owner);</span>
+<span class="fc" id="L16">    bulletsArray.add(bullet);</span>
+<span class="fc" id="L17">    weapon.reduceBullet();</span>
+<span class="fc" id="L18">    System.out.println(&quot;Bullet created. Total bullets: &quot; + bulletsArray.size);</span>
+<span class="fc" id="L19">  }</span>
+
+  public void removeDestroyedBullets(World world) {
+<span class="fc bfc" id="L22" title="All 2 branches covered.">      for (int i = bulletsArray.size - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L23">          Bullet bullet = bulletsArray.get(i);</span>
+
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">          if (bullet.isDestroyed()) {</span>
+<span class="fc" id="L26">              world.destroyBody(bullet.getBody());</span>
+<span class="fc" id="L27">              bulletsArray.removeIndex(i);</span>
+          }
+      }
+<span class="fc" id="L30">  }</span>
+
+  public void draw(ShapeRenderer shapes) {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">      for (Bullet bullet : bulletsArray) {</span>
+<span class="nc" id="L34">          bullet.draw(shapes);</span>
+<span class="nc" id="L35">      }</span>
+<span class="nc" id="L36">  }</span>
+
+  public Array&lt;Bullet&gt; getBullets() {
+<span class="fc" id="L39">      return bulletsArray;</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

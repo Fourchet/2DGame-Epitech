@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlayerSpawner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.world</a> &gt; <span class="el_source">PlayerSpawner.java</span></div><h1>PlayerSpawner.java</h1><pre class="source lang-java linenums">package com.mygame.world;
+
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
+import com.mygame.MapEvents;
+import com.mygame.entities.Player.Player;
+import com.mygame.items.Weapons.Weapon;
+import com.mygame.system.CameraController;
+
+<span class="nc" id="L10">public class PlayerSpawner {</span>
+
+    //  spawns player at a named spawn point, or the middle of the map if it doesn't exist. 
+    public Player spawnPlayer(String spawnName, World world, MapManager mapManager, Weapon currentWeapon, CameraController cameraController) {
+<span class="nc" id="L14">        Vector2 pos = MapEvents.findSpawn(mapManager.getMap(), spawnName);</span>
+<span class="nc bnc" id="L15" title="All 2 branches missed.">        if (pos == null) pos = new Vector2(mapManager.getMapWidth() / 2f, mapManager.getMapHeight() / 2f);</span>
+
+<span class="nc" id="L17">        Player player = new Player(world, pos.x, pos.y, currentWeapon); // keeps his gun and ammo between maps</span>
+<span class="nc" id="L18">        cameraController.snapCameraToPlayer(player);</span>
+
+<span class="nc" id="L20">        return player;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

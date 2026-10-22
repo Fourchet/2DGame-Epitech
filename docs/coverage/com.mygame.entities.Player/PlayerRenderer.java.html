@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlayerRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame.entities.Player</a> &gt; <span class="el_source">PlayerRenderer.java</span></div><h1>PlayerRenderer.java</h1><pre class="source lang-java linenums">package com.mygame.entities.Player;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+
+// torso follows mouse like in intravenous or hotline miami, legs follow movement
+public class PlayerRenderer {
+    private static final float FRAME_DURATION = 0.1f; // seconds per leg frame, lower = faster steps
+    private static final float IDLE_FRAME_DURATION = 0.8f; // seconds per breathing frame, higher = slower breathing
+    private static final float SCALE = 0.7f; // character size, 1 = original size
+    private static final int PISTOL_FRAME_WIDTH = 100; // pistol frames are 100x50
+    private static final int RIFLE_FRAME_WIDTH = 150; // rifle holding and firing frames are 150x70, not squares
+    private static final int RIFLE_RELOAD_FRAME_WIDTH = 120; // reload strip still 120x70, change it if you redraw it wider
+    private static final float FIRE_FRAME_DURATION = 0.05f; // firing anim is quick, has to end before the next shot
+
+    private final Texture torsoTexture;
+    private final Animation&lt;TextureRegion&gt; torsoIdle;
+    private float torsoAngle; // degrees, 0 = facing right
+    private float idleTime;
+
+    private final Texture torsoWalkTexture;
+    private final Animation&lt;TextureRegion&gt; torsoWalk;
+    private final Animation&lt;TextureRegion&gt; torsoWalkBackward;
+
+    private final Texture torsoPistolTexture;
+    private final Animation&lt;TextureRegion&gt; torsoPistol;
+    private boolean holdingPistol;
+
+    private final Texture torsoRifleTexture;
+    private final Animation&lt;TextureRegion&gt; torsoRifle;
+    private boolean holdingRifle;
+
+    // firing anims, null until the strip exists
+    private Texture torsoPistolFireTexture;
+    private Animation&lt;TextureRegion&gt; torsoPistolFire;
+    private Texture torsoRifleFireTexture;
+    private Animation&lt;TextureRegion&gt; torsoRifleFire;
+    private float fireTime;
+    private boolean firing;
+
+    // reload anims, null until the strip exists
+    private Texture torsoPistolReloadTexture;
+    private TextureRegion[] torsoPistolReload;
+    private Texture torsoRifleReloadTexture;
+    private TextureRegion[] torsoRifleReload;
+<span class="nc" id="L50">    private float reloadProgress = -1f; // 0 to 1 while reloading, -1 when not</span>
+
+    private final Texture legsTexture;
+    private final Animation&lt;TextureRegion&gt; walk;
+    private final Animation&lt;TextureRegion&gt; walkBackward;
+    private float legsAngle;
+    private float walkTime;
+    private boolean moving;
+
+    private float lastX, lastY;
+    private boolean hasLastPosition;
+
+<span class="nc" id="L62">    public PlayerRenderer() {</span>
+        // breathing strip, same deal as the legs
+<span class="nc" id="L64">        torsoTexture = new Texture(&quot;sprites/oconnor_torso_idle.png&quot;);</span>
+<span class="nc" id="L65">        int torsoFrameSize = torsoTexture.getHeight();</span>
+<span class="nc" id="L66">        TextureRegion[] torsoFrames = TextureRegion.split(torsoTexture, torsoFrameSize, torsoFrameSize)[0];</span>
+<span class="nc" id="L67">        torsoIdle = new Animation&lt;&gt;(IDLE_FRAME_DURATION, torsoFrames);</span>
+<span class="nc" id="L68">        torsoIdle.setPlayMode(Animation.PlayMode.LOOP_PINGPONG); // in then out, no snapping back</span>
+
+        // walking strip, same frame count as the legs so they stay synced
+<span class="nc" id="L71">        torsoWalkTexture = new Texture(&quot;sprites/oconnor_torso_walk.png&quot;);</span>
+<span class="nc" id="L72">        int walkFrameSize = torsoWalkTexture.getHeight();</span>
+<span class="nc" id="L73">        TextureRegion[] torsoWalkFrames = TextureRegion.split(torsoWalkTexture, walkFrameSize, walkFrameSize)[0];</span>
+<span class="nc" id="L74">        torsoWalk = new Animation&lt;&gt;(FRAME_DURATION, torsoWalkFrames);</span>
+<span class="nc" id="L75">        torsoWalk.setPlayMode(Animation.PlayMode.LOOP);</span>
+<span class="nc" id="L76">        torsoWalkBackward = new Animation&lt;&gt;(FRAME_DURATION, torsoWalkFrames);</span>
+<span class="nc" id="L77">        torsoWalkBackward.setPlayMode(Animation.PlayMode.LOOP_REVERSED);</span>
+
+        // holding the pistol, arms locked forward so it just breathes
+<span class="nc" id="L80">        torsoPistolTexture = new Texture(&quot;sprites/oconnor_torso_gun.png&quot;);</span>
+<span class="nc" id="L81">        TextureRegion[] pistolFrames = splitStrip(torsoPistolTexture, PISTOL_FRAME_WIDTH);</span>
+<span class="nc" id="L82">        torsoPistol = new Animation&lt;&gt;(IDLE_FRAME_DURATION, pistolFrames);</span>
+<span class="nc" id="L83">        torsoPistol.setPlayMode(Animation.PlayMode.LOOP_PINGPONG);</span>
+
+        // holding the rifle, bigger canvas so it gets its own frame width
+<span class="nc" id="L86">        torsoRifleTexture = new Texture(&quot;sprites/oconnor_torso_rifle.png&quot;);</span>
+<span class="nc" id="L87">        TextureRegion[] rifleFrames = splitStrip(torsoRifleTexture, RIFLE_FRAME_WIDTH);</span>
+<span class="nc" id="L88">        torsoRifle = new Animation&lt;&gt;(IDLE_FRAME_DURATION, rifleFrames);</span>
+<span class="nc" id="L89">        torsoRifle.setPlayMode(Animation.PlayMode.LOOP_PINGPONG);</span>
+
+        // firing strips, played once per shot, skipped if not drawn yet
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (Gdx.files.internal(&quot;sprites/oconnor_torso_gun_fire.png&quot;).exists()) {</span>
+<span class="nc" id="L93">            torsoPistolFireTexture = new Texture(&quot;sprites/oconnor_torso_gun_fire.png&quot;);</span>
+<span class="nc" id="L94">            torsoPistolFire = new Animation&lt;&gt;(FIRE_FRAME_DURATION,</span>
+<span class="nc" id="L95">                    splitStrip(torsoPistolFireTexture, PISTOL_FRAME_WIDTH));</span>
+        }
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (Gdx.files.internal(&quot;sprites/oconnor_torso_rifle_fire.png&quot;).exists()) {</span>
+<span class="nc" id="L98">            torsoRifleFireTexture = new Texture(&quot;sprites/oconnor_torso_rifle_fire.png&quot;);</span>
+<span class="nc" id="L99">            torsoRifleFire = new Animation&lt;&gt;(FIRE_FRAME_DURATION,</span>
+<span class="nc" id="L100">                    splitStrip(torsoRifleFireTexture, RIFLE_FRAME_WIDTH));</span>
+        }
+
+        // reload strips, stretched over the whole reload, skipped if not drawn yet
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (Gdx.files.internal(&quot;sprites/oconnor_torso_gun_reload.png&quot;).exists()) {</span>
+<span class="nc" id="L105">            torsoPistolReloadTexture = new Texture(&quot;sprites/oconnor_torso_gun_reload.png&quot;);</span>
+<span class="nc" id="L106">            torsoPistolReload = splitStrip(torsoPistolReloadTexture, PISTOL_FRAME_WIDTH);</span>
+        }
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (Gdx.files.internal(&quot;sprites/oconnor_torso_rifle_reload.png&quot;).exists()) {</span>
+<span class="nc" id="L109">            torsoRifleReloadTexture = new Texture(&quot;sprites/oconnor_torso_rifle_reload.png&quot;);</span>
+<span class="nc" id="L110">            torsoRifleReload = splitStrip(torsoRifleReloadTexture, RIFLE_RELOAD_FRAME_WIDTH);</span>
+        }
+
+        // Legs strip: frames side by side, each frame is a square as tall as the image
+<span class="nc" id="L114">        legsTexture = new Texture(&quot;sprites/oconnor_legs.png&quot;);</span>
+<span class="nc" id="L115">        int frameSize = legsTexture.getHeight();</span>
+<span class="nc" id="L116">        TextureRegion[] frames = TextureRegion.split(legsTexture, frameSize, frameSize)[0];</span>
+<span class="nc" id="L117">        walk = new Animation&lt;&gt;(FRAME_DURATION, frames);</span>
+<span class="nc" id="L118">        walk.setPlayMode(Animation.PlayMode.LOOP);</span>
+<span class="nc" id="L119">        walkBackward = new Animation&lt;&gt;(FRAME_DURATION, frames);</span>
+<span class="nc" id="L120">        walkBackward.setPlayMode(Animation.PlayMode.LOOP_REVERSED);</span>
+<span class="nc" id="L121">    }</span>
+
+    // cuts a strip into frames, if the image is narrower than one frame it becomes a single frame instead of crashing
+    private static TextureRegion[] splitStrip(Texture texture, int frameWidth) {
+<span class="nc" id="L125">        int w = Math.min(frameWidth, texture.getWidth());</span>
+<span class="nc" id="L126">        return TextureRegion.split(texture, w, texture.getHeight())[0];</span>
+    }
+
+    public void update(float delta, float x, float y) {
+<span class="nc" id="L130">        idleTime += delta; // breathing never stops</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (firing) fireTime += delta;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (hasLastPosition) {</span>
+<span class="nc" id="L133">            float dx = x - lastX;</span>
+<span class="nc" id="L134">            float dy = y - lastY;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            moving = dx * dx + dy * dy &gt; 0.01f;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (moving) {</span>
+<span class="nc" id="L137">                legsAngle = MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees;</span>
+<span class="nc" id="L138">                walkTime += delta;</span>
+            } else {
+<span class="nc" id="L140">                walkTime = 0; // back to the first frame when standing still (default oconnor)</span>
+            }
+        }
+<span class="nc" id="L143">        lastX = x;</span>
+<span class="nc" id="L144">        lastY = y;</span>
+<span class="nc" id="L145">        hasLastPosition = true;</span>
+<span class="nc" id="L146">    }</span>
+
+    // Turns the torso toward a point in the world
+    public void aimAt(float x, float y, float targetX, float targetY) {
+<span class="nc" id="L150">        torsoAngle = MathUtils.atan2(targetY - y, targetX - x) * MathUtils.radiansToDegrees;</span>
+<span class="nc" id="L151">    }</span>
+
+    // plays the firing anim from the start, call it on every shot
+    public void fire() {
+<span class="nc" id="L155">        firing = true;</span>
+<span class="nc" id="L156">        fireTime = 0;</span>
+<span class="nc" id="L157">    }</span>
+
+    // 0 to 1 while reloading, -1 when not, the anim follows the real reload time
+    public void setReloadProgress(float reloadProgress) {
+<span class="nc" id="L161">        this.reloadProgress = reloadProgress;</span>
+<span class="nc" id="L162">    }</span>
+
+    // true = draws him holding the pistol
+    public void setHoldingPistol(boolean holdingPistol) {
+<span class="nc" id="L166">        this.holdingPistol = holdingPistol;</span>
+<span class="nc" id="L167">    }</span>
+
+    // true = draws him holding the rifle
+    public void setHoldingRifle(boolean holdingRifle) {
+<span class="nc" id="L171">        this.holdingRifle = holdingRifle;</span>
+<span class="nc" id="L172">    }</span>
+
+    // renders legs and torso
+    //Draws legs then torso, centered on (x, y), in world pixels.
+    public void draw(SpriteBatch batch, float x, float y) {
+<span class="nc" id="L177">        TextureRegion legs = walk.getKeyFrame(walkTime);</span>
+<span class="nc" id="L178">        TextureRegion torso = torsoIdle.getKeyFrame(idleTime);</span>
+<span class="nc" id="L179">        float angle = torsoAngle; // standing still: legs face the same way as the torso</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (moving) {</span>
+            // Angle between where he walks and where he looks, from -180 to 180
+<span class="nc" id="L183">            float diff = ((legsAngle - torsoAngle) % 360 + 540) % 360 - 180;</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (Math.abs(diff) &gt; 90) {</span>
+                // Walking backward: legs turn around to match the torso, steps play in reverse
+<span class="nc" id="L187">                legs = walkBackward.getKeyFrame(walkTime);</span>
+<span class="nc" id="L188">                torso = torsoWalkBackward.getKeyFrame(walkTime); // arms swing in reverse too</span>
+<span class="nc" id="L189">                angle = legsAngle + 180;</span>
+            } else {
+<span class="nc" id="L191">                torso = torsoWalk.getKeyFrame(walkTime); // arms swing with the steps</span>
+<span class="nc" id="L192">                angle = legsAngle;</span>
+            }
+        }
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (holdingRifle) torso = torsoRifle.getKeyFrame(idleTime); // arms locked on the rifle, no swing</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        else if (holdingPistol) torso = torsoPistol.getKeyFrame(idleTime); // same with the pistol</span>
+
+        // firing anim of the weapon in hand, back to holding once it's done
+<span class="nc bnc" id="L200" title="All 4 branches missed.">        Animation&lt;TextureRegion&gt; fireAnim = holdingRifle ? torsoRifleFire : holdingPistol ? torsoPistolFire : null;</span>
+<span class="nc bnc" id="L201" title="All 4 branches missed.">        if (firing &amp;&amp; fireAnim != null) {</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            if (fireAnim.isAnimationFinished(fireTime)) firing = false;</span>
+<span class="nc" id="L203">            else torso = fireAnim.getKeyFrame(fireTime);</span>
+        }
+
+        // reload anim of the weapon in hand, frame picked from how far the reload is
+<span class="nc bnc" id="L207" title="All 4 branches missed.">        TextureRegion[] reloadFrames = holdingRifle ? torsoRifleReload : holdingPistol ? torsoPistolReload : null;</span>
+<span class="nc bnc" id="L208" title="All 4 branches missed.">        if (reloadProgress &gt;= 0 &amp;&amp; reloadFrames != null) {</span>
+<span class="nc" id="L209">            int i = Math.min(reloadFrames.length - 1, (int) (reloadProgress * reloadFrames.length));</span>
+<span class="nc" id="L210">            torso = reloadFrames[i];</span>
+        }
+
+<span class="nc bnc" id="L213" title="All 2 branches missed.">        if (moving) drawCentered(batch, legs, x, y, angle); // legs hidden when standing, torso covers them</span>
+<span class="nc" id="L214">        drawCentered(batch, torso, x, y, torsoAngle);</span>
+<span class="nc" id="L215">    }</span>
+
+    private void drawCentered(SpriteBatch batch, TextureRegion region, float x, float y, float angle) {
+<span class="nc" id="L218">        float w = region.getRegionWidth();</span>
+<span class="nc" id="L219">        float h = region.getRegionHeight();</span>
+        // Rotates around the center of the image
+<span class="nc" id="L221">        batch.draw(region, Math.round(x) - w / 2f, Math.round(y) - h / 2f,</span>
+                w / 2f, h / 2f, w, h, SCALE, SCALE, angle);
+<span class="nc" id="L223">    }</span>
+
+    public void dispose() {
+<span class="nc" id="L226">        torsoTexture.dispose();</span>
+<span class="nc" id="L227">        torsoWalkTexture.dispose();</span>
+<span class="nc" id="L228">        torsoPistolTexture.dispose();</span>
+<span class="nc" id="L229">        torsoRifleTexture.dispose();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        if (torsoPistolFireTexture != null) torsoPistolFireTexture.dispose();</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (torsoRifleFireTexture != null) torsoRifleFireTexture.dispose();</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (torsoPistolReloadTexture != null) torsoPistolReloadTexture.dispose();</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">        if (torsoRifleReloadTexture != null) torsoRifleReloadTexture.dispose();</span>
+<span class="nc" id="L234">        legsTexture.dispose();</span>
+<span class="nc" id="L235">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

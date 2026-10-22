@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameScreen.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.mygame</a> &gt; <span class="el_source">GameScreen.java</span></div><h1>GameScreen.java</h1><pre class="source lang-java linenums">package com.mygame;
+
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Box2D;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mygame.factory.BulletManager;
+import com.mygame.factory.EnemiesManager;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.mygame.entities.Enemy.Zombie.Zombie;
+import com.mygame.entities.Enemy.Zombie.ZombieRenderer;
+import com.mygame.entities.Player.Player;
+import com.mygame.entities.Player.PlayerRenderer;
+import com.badlogic.gdx.utils.Array;
+import com.mygame.audio.SoundManager;
+import com.mygame.system.CameraController;
+import com.mygame.system.WeaponController;
+import com.mygame.world.MapManager;
+import com.mygame.world.PlayerSpawner;
+import com.mygame.render.GameRenderer;
+import com.mygame.render.PostProcess;
+import com.mygame.render.LightManager;
+import com.mygame.world.SleepEvent;
+import com.mygame.world.TravelCutscene;
+
+
+
+<span class="nc" id="L34">public class GameScreen extends ScreenAdapter {</span>
+    private static final float WORLD_WIDTH = 640;
+    private static final float WORLD_HEIGHT = 360;
+    private SpriteBatch batch;
+    private PlayerRenderer playerRenderer;
+    private Texture zombieWalkTexture;
+    private Animation&lt;TextureRegion&gt; zombieWalk; // shared by every zombie
+<span class="nc" id="L41">    private final Array&lt;Body&gt; bodies = new Array&lt;&gt;(); // reused every frame</span>
+<span class="nc" id="L42">    private final ObjectMap&lt;Zombie, ZombieRenderer&gt; zombieRenderers = new ObjectMap&lt;&gt;(); // one renderer per zombie</span>
+
+    private SoundManager sounds;
+    private Texture bulletTexture;
+    private TextureRegion bulletSprite;
+
+    private World world;
+    private Player player;
+    private CameraController cameraController;
+    private MapManager mapManager;
+    private WeaponController weaponController;
+    private PlayerSpawner playerSpawner;
+    private GameRenderer gameRenderer;
+    private PostProcess postProcess;
+    private LightManager lightManager;
+<span class="nc" id="L57">    private final SleepEvent sleepEvent = new SleepEvent(); // bed: press E to sleep till the light changes</span>
+<span class="nc" id="L58">    private final TravelCutscene travel = new TravelCutscene(); // doors with a &quot;cutscene&quot; play it before you arrive</span>
+
+<span class="nc" id="L60">    private final ShapeRenderer shapes = new ShapeRenderer();</span>
+    private EnemiesManager factory; // ennemy factory
+    private BulletManager bullet_factory; // bullet factory
+
+    @Override
+    public void show() {
+<span class="nc" id="L66">        Box2D.init();</span>
+<span class="nc" id="L67">        cameraController = new CameraController(WORLD_WIDTH, WORLD_HEIGHT);</span>
+<span class="nc" id="L68">        mapManager = new MapManager();</span>
+<span class="nc" id="L69">        weaponController = new WeaponController();</span>
+<span class="nc" id="L70">        playerSpawner = new PlayerSpawner();</span>
+<span class="nc" id="L71">        batch = new SpriteBatch();</span>
+<span class="nc" id="L72">        playerRenderer = new PlayerRenderer();</span>
+<span class="nc" id="L73">        zombieWalkTexture = new Texture(&quot;sprites/zombie_walk.png&quot;);</span>
+<span class="nc" id="L74">        zombieWalk = ZombieRenderer.loadWalk(zombieWalkTexture);</span>
+<span class="nc" id="L75">        sounds = new SoundManager();</span>
+<span class="nc" id="L76">        bulletTexture = new Texture(&quot;sprites/bullet.png&quot;);</span>
+<span class="nc" id="L77">        bulletSprite = new TextureRegion(bulletTexture);</span>
+<span class="nc" id="L78">        mapManager.loadMap(&quot;map.tmx&quot;);</span>
+<span class="nc" id="L79">        world = mapManager.getWorld();</span>
+<span class="nc" id="L80">        postProcess = new PostProcess();</span>
+<span class="nc" id="L81">        lightManager = new LightManager(world, mapManager.getMap(), cameraController.getViewport()); // lamps and sun from the map's &quot;lights&quot; layer</span>
+<span class="nc" id="L82">        player = playerSpawner.spawnPlayer(&quot;start&quot;, world, mapManager, weaponController.getCurrentWeapon(), cameraController); // only one player, at the start spawn</span>
+        
+        // spawns enemies and bullet in creating the managers
+<span class="nc" id="L85">        factory = new EnemiesManager();</span>
+<span class="nc" id="L86">        bullet_factory = new BulletManager();</span>
+
+<span class="nc" id="L88">        gameRenderer = new GameRenderer(batch, playerRenderer, zombieWalk, bodies, zombieRenderers, bulletSprite, shapes, sounds);</span>
+
+        // spawns enemies
+<span class="nc" id="L91">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 110, mapManager.getMapHeight() / 2f); //default zombie spawn</span>
+<span class="nc" id="L92">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 100, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L93">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 130, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L94">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L95">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L96">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L97">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L98">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);</span>
+<span class="nc" id="L99">        factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);</span>
+
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+
+        
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        playerRenderer.setHoldingRifle(weaponController.getCurrentWeapon() == weaponController.getRifle());</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        playerRenderer.setHoldingPistol(weaponController.getCurrentWeapon() == weaponController.getPistol());</span>
+<span class="nc" id="L108">        weaponController.setLastAmmo(weaponController.getCurrentWeapon().getActualBullets());</span>
+<span class="nc" id="L109">    }</span>
+
+
+    private void checkMapTransition() {
+<span class="nc" id="L113">        float px = player.getPosition().x * Physics.PPM;</span>
+<span class="nc" id="L114">        float py = player.getPosition().y * Physics.PPM;</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (travel.isBusy()) return; // already on the way</span>
+<span class="nc" id="L117">        MapObject door = MapEvents.findDoorAt(mapManager.getMap(), px, py);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (door == null) return;</span>
+
+        // door with a cutscene: the map changes later, when the screen is black
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (door.getProperties().containsKey(&quot;cutscene&quot;)) {</span>
+<span class="nc" id="L122">            travel.start(door);</span>
+<span class="nc" id="L123">            return;</span>
+        }
+<span class="nc" id="L125">        changeMap(door.getProperties().get(&quot;target&quot;, String.class), door.getProperties().get(&quot;spawn&quot;, String.class));</span>
+<span class="nc" id="L126">    }</span>
+
+    private void changeMap(String target, String spawn) {
+<span class="nc" id="L129">        mapManager.loadMap(target);</span>
+<span class="nc" id="L130">        world = mapManager.getWorld();</span>
+        // lights belong to the old world too, new ones from the new map
+<span class="nc" id="L132">        lightManager.dispose();</span>
+<span class="nc" id="L133">        lightManager = new LightManager(world, mapManager.getMap(), cameraController.getViewport());</span>
+<span class="nc" id="L134">        lightManager.setDay(sleepEvent.isDay()); // still morning in the next map</span>
+<span class="nc" id="L135">        zombieRenderers.clear(); // old zombies died with the old world</span>
+        // old enemies and bullets died with the old world too, start with empty managers
+<span class="nc" id="L137">        factory = new EnemiesManager();</span>
+<span class="nc" id="L138">        bullet_factory = new BulletManager();</span>
+<span class="nc" id="L139">        player = playerSpawner.spawnPlayer(spawn, world, mapManager, weaponController.getCurrentWeapon(), cameraController);</span>
+<span class="nc" id="L140">    }</span>
+
+    
+    @Override
+    public void render(float delta) {
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (travel.update(delta)) changeMap(travel.getTarget(), travel.getSpawn()); // screen is black, swap the map behind it</span>
+<span class="nc" id="L146">        sleepEvent.update(delta, player, world, mapManager.getMap(), lightManager, gameRenderer);</span>
+        // no moving or shooting while he sleeps or drives
+<span class="nc bnc" id="L148" title="All 4 branches missed.">        if (!sleepEvent.isBusy() &amp;&amp; !travel.isBusy()) {</span>
+<span class="nc" id="L149">            weaponController.handleWeaponSwap(player, playerRenderer);</span>
+
+<span class="nc" id="L151">            player.update(cameraController.getMouse(), world, bullet_factory, delta);</span>
+
+<span class="nc" id="L153">            weaponController.handleWeaponEffects(playerRenderer, sounds);</span>
+        }
+
+<span class="nc" id="L156">        factory.update(player, delta);</span>
+
+<span class="nc" id="L158">        world.step(Math.min(delta, 1f / 30f), 6, 2);</span>
+<span class="nc" id="L159">        bullet_factory.removeDestroyedBullets(world);</span>
+<span class="nc" id="L160">        factory.removeDeadEnemies(world);</span>
+<span class="nc" id="L161">        checkMapTransition();</span>
+
+<span class="nc" id="L163">        cameraController.updateCamera(player, delta);</span>
+
+<span class="nc" id="L165">        lightManager.update(delta, cameraController.getCamera()); // rays and light texture, before the filter</span>
+<span class="nc" id="L166">        postProcess.begin(); // game draws into the filter's texture</span>
+<span class="nc" id="L167">        gameRenderer.render(delta, world, player, cameraController, mapManager);</span>
+<span class="nc" id="L168">        lightManager.render(); // darkness and lights on top of the game</span>
+<span class="nc" id="L169">        sleepEvent.drawFade(shapes, cameraController.getCamera()); // black fades on top of everything</span>
+<span class="nc" id="L170">        travel.draw(batch, shapes, cameraController.getViewport()); // car cutscene over the whole screen</span>
+<span class="nc" id="L171">        postProcess.end(delta); // then onto the screen with the cozy shader</span>
+<span class="nc" id="L172">        lightManager.flash(gameRenderer.getNewShots()); // this frame's shots light up the room</span>
+
+<span class="nc" id="L174">    }</span>
+
+
+    @Override
+    public void resize(int width, int height) {
+<span class="nc" id="L179">        cameraController.resize(width, height);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        if (postProcess != null) postProcess.resize(); // filter texture follows the window size</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (lightManager != null) lightManager.resize(cameraController.getViewport()); // lights follow the black bars</span>
+<span class="nc" id="L182">    }</span>
+
+
+    @Override
+    public void dispose() {
+<span class="nc" id="L187">        shapes.dispose();</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (mapManager != null) mapManager.dispose();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (zombieWalkTexture != null) zombieWalkTexture.dispose();</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (bulletTexture != null) bulletTexture.dispose();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (sounds != null) sounds.dispose();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (batch != null) batch.dispose();</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (playerRenderer != null) playerRenderer.dispose();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (postProcess != null) postProcess.dispose();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (lightManager != null) lightManager.dispose();</span>
+<span class="nc" id="L196">        travel.dispose();</span>
+<span class="nc" id="L197">    }    </span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
