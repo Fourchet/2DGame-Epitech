@@ -151,6 +151,7 @@ public class GameScreen extends ScreenAdapter {
         lightManager = new LightManager(world, mapManager.getMap(), cameraController.getViewport());
         lightManager.setDay(sleepEvent.isDay()); // still morning in the next map
         zombieRenderers.clear(); // old zombies died with the old world
+        gameRenderer.clearEffects(); // soldier corpses, blood and shot flashes from the old map
         // old enemies and bullets died with the old world too, start with empty managers
         factory = new EnemiesManager();
         bullet_factory = new BulletManager();
