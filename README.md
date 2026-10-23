@@ -1,33 +1,97 @@
-# 2DGAME
+# 2D GAME
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+A 2D top-down horror survival shooter made in Java with [libGDX](https://libgdx.com/).
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+You play as O'Connor, looking for his brother in a town overrun by zombies and soldiers.
+Explore the maps, shoot your way through and survive.
 
-## Platforms
+## Features
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+- Free movement and mouse aiming, two weapons (pistol and rifle) with ammo and reload
+- Two enemy types: **zombies** (melee) and **soldiers** (ranged or melee)
+- Several maps made with Tiled, linked by doors and a car cutscene
+- Dynamic lights and shadows, day / night cycle by sleeping in a bed
+- Hand-made pixel art animations, blood effects and positional sounds
+- Game over screen when the player dies
 
-## Gradle
+## Requirements
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+- JDK 17 or newer (tested with JDK 21)
+- Nothing else: the Gradle wrapper (`./gradlew`) downloads what it needs
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+## Run the game
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+```bash
+./gradlew lwjgl3:run
+```
+
+Build a runnable jar (created in `lwjgl3/build/libs/`):
+
+```bash
+./gradlew lwjgl3:jar
+```
+
+## Controls
+
+| Action                    | QWERTY        | AZERTY        |
+| ------------------------- | ------------- | ------------- |
+| Move                      | W A S D       | Z Q S D       |
+| Aim                       | Mouse         | Mouse         |
+| Shoot / reload when empty | Left click    | Left click    |
+| Pistol                    | 1             | &             |
+| Rifle                     | 2             | é             |
+| Switch weapon             | Q             | A             |
+| Sleep (on a bed)          | E             | E             |
+| Skip cutscene             | Space / Enter | Space / Enter |
+| Restart after game over   | Enter         | Enter         |
+
+## Tests and code coverage
+
+Unit tests use JUnit 5, coverage uses JaCoCo.
+
+```bash
+./gradlew core:test
+```
+
+- Test results: `core/build/reports/tests/test/index.html`
+- Coverage report: `docs/coverage/index.html` (generated after the tests)
+
+## Documentation
+
+- **Javadoc**: `docs/javadoc/index.html`, generated with `./gradlew core:javadoc`
+- **Game Design Document**: `1.1v_GDD/`
+
+## Project structure
+
+```
+core/src/main/java/com/mygame/
+├── Main.java, GameScreen.java   entry point and game loop
+├── entities/     Entity, Enemy, Zombie, Military, Player, Bullet
+├── items/        Items, Weapon, Pistol, Rifle, MilitaryWeapon
+├── factory/      EnemiesManager, BulletManager
+├── collisions/   GameContactListener (Box2D contacts → damage)
+├── world/        maps, spawns, doors, sleep event, cutscene
+├── system/       camera, weapon controller, BulletOwner
+├── render/       renderers, lights, post-processing shader
+└── audio/        SoundManager
+core/src/test/    JUnit tests
+lwjgl3/           desktop launcher
+assets/           sprites, sounds, Tiled maps, shaders
+```
+
+Main class hierarchy:
+
+```
+Entity (abstract)          Items (abstract)
+├── Player                 └── Weapon (abstract)
+└── Enemy (abstract)           ├── Pistol
+    ├── Zombie                 ├── Rifle
+    └── Military               └── MilitaryWeapon
+```
+
+## Built with
+
+- [libGDX](https://libgdx.com/) - graphics, input, audio
+- [Box2D](https://box2d.org/) - physics and collisions
+- [box2dlights](https://github.com/libgdx/box2dlights) - lights and shadows
+- [Tiled](https://www.mapeditor.org/) - map editor
