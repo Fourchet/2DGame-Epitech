@@ -1,6 +1,12 @@
 package com.mygame;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Box2D;
@@ -9,6 +15,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygame.factory.BulletManager;
 import com.mygame.factory.EnemiesManager;
+import com.mygame.items.Weapons.MilitaryWeapon;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -61,9 +68,20 @@ public class GameScreen extends ScreenAdapter {
     private EnemiesManager factory; // ennemy factory
     private BulletManager bullet_factory; // bullet factory
 
+    private final Main game; // to restart a new game after a game over
+    private boolean gameOver = false;
+    private float gameOverTimer = 0f; // seconds since the player died
+    private BitmapFont font;
+    private final Matrix4 screenMatrix = new Matrix4(); // screen coordinates for the game over text
+
+    public GameScreen(Main game) {
+        this.game = game;
+    }
+
     @Override
     public void show() {
         Box2D.init();
+        font = new BitmapFont(); // libGDX default font
         cameraController = new CameraController(WORLD_WIDTH, WORLD_HEIGHT);
         mapManager = new MapManager();
         weaponController = new WeaponController();
@@ -98,9 +116,9 @@ public class GameScreen extends ScreenAdapter {
         factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
         factory.spawnZombie(world, mapManager.getMapWidth() / 2f + 150, mapManager.getMapHeight() / 2f);
 
-        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
-        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
-        //factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
+        factory.spawnMilitary(world, mapManager.getMapWidth() / 2f - 80, mapManager.getMapHeight() / 2f, new MilitaryWeapon(), bullet_factory); //default military spawn
 
         
         playerRenderer.setHoldingRifle(weaponController.getCurrentWeapon() == weaponController.getRifle());
@@ -142,10 +160,12 @@ public class GameScreen extends ScreenAdapter {
     
     @Override
     public void render(float delta) {
+        if (!gameOver && player.isDead()) gameOver = true; // health reached 0 in takeDamage()
+
         if (travel.update(delta)) changeMap(travel.getTarget(), travel.getSpawn()); // screen is black, swap the map behind it
         sleepEvent.update(delta, player, world, mapManager.getMap(), lightManager, gameRenderer);
-        // no moving or shooting while he sleeps or drives
-        if (!sleepEvent.isBusy() && !travel.isBusy()) {
+        // no moving or shooting while he sleeps, drives or is dead
+        if (!gameOver && !sleepEvent.isBusy() && !travel.isBusy()) {
             weaponController.handleWeaponSwap(player, playerRenderer);
 
             player.update(cameraController.getMouse(), world, bullet_factory, delta);
@@ -153,7 +173,7 @@ public class GameScreen extends ScreenAdapter {
             weaponController.handleWeaponEffects(playerRenderer, sounds);
         }
 
-        factory.update(player, delta);
+        if (!gameOver) factory.update(player, delta); // enemies freeze once the player is dead
 
         world.step(Math.min(delta, 1f / 30f), 6, 2);
         bullet_factory.removeDestroyedBullets(world);
@@ -171,6 +191,37 @@ public class GameScreen extends ScreenAdapter {
         postProcess.end(delta); // then onto the screen with the cozy shader
         lightManager.flash(gameRenderer.getNewShots()); // this frame's shots light up the room
 
+        if (gameOver) {
+            gameOverTimer += delta;
+            drawGameOver();
+            // wait 1 s so a key pressed while dying doesn't restart right away
+            if (gameOverTimer > 1f && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+                game.setScreen(new GameScreen(game));
+                dispose(); // setScreen() only hides the old screen, free its textures, sounds and world
+                return;
+            }
+        }
+    }
+
+    // black veil + text over the whole screen, in screen coordinates like TravelCutscene
+    private void drawGameOver() {
+        cameraController.getViewport().apply();
+        float w = cameraController.getViewport().getWorldWidth();
+        float h = cameraController.getViewport().getWorldHeight();
+        screenMatrix.setToOrtho2D(0, 0, w, h);
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapes.setProjectionMatrix(screenMatrix);
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
+        shapes.setColor(0, 0, 0, Math.min(0.7f, gameOverTimer)); // fades to black
+        shapes.rect(0, 0, w, h);
+        shapes.end();
+
+        batch.setProjectionMatrix(screenMatrix);
+        batch.begin();
+        font.draw(batch, "GAME OVER", 0, h / 2f + 20, w, Align.center, false);
+        if (gameOverTimer > 1f) font.draw(batch, "Press ENTER to restart", 0, h / 2f - 10, w, Align.center, false);
+        batch.end();
     }
 
 
@@ -193,6 +244,7 @@ public class GameScreen extends ScreenAdapter {
         if (playerRenderer != null) playerRenderer.dispose();
         if (postProcess != null) postProcess.dispose();
         if (lightManager != null) lightManager.dispose();
+        if (font != null) font.dispose();
         travel.dispose();
     }    
 }
