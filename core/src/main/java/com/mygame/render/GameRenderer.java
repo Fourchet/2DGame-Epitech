@@ -30,6 +30,9 @@ import com.mygame.world.MapManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.mygame.system.BulletOwner;
 import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.maps.MapLayers;
+import com.badlogic.gdx.maps.tiled.TiledMap;
 
 public class GameRenderer {
     private SpriteBatch batch;
@@ -59,6 +62,9 @@ public class GameRenderer {
     private static final float PLAYER_MUZZLE_SIDE = -3f; // px, the rifle sits a bit to his right
     private static final float ENEMY_MUZZLE_OFFSET = 27.5f; // soldiers, 0 if bullets already spawn at the barrel
     private boolean playerVisible = true;
+    // layers with a "top" property draw over the characters (roofs, ceilings, tree tops...)
+    private TiledMap layersOf; // the map the two lists below were made for
+    private int[] belowLayers, topLayers;
     private ObjectSet<Bullet> seenBullets = new ObjectSet<>(); // bullets already on screen last frame
     private ObjectSet<Bullet> currentBullets = new ObjectSet<>();
 
@@ -90,7 +96,8 @@ public class GameRenderer {
             camera.position.y - viewport.getWorldHeight() / 2f - margin,
             viewport.getWorldWidth() + margin * 2,
             viewport.getWorldHeight() + margin * 2);
-        mapManager.getMapRenderer().render();
+        sortLayers(mapManager.getMap());
+        mapManager.getMapRenderer().render(belowLayers); // everything but the "top" layers
 
         float px = player.getPosition().x * Physics.PPM; // replaces the placeholder greysquare with the custom character i made, !!!!!! DO LEGS NEXT !!!!!!
         float py = player.getPosition().y * Physics.PPM;
@@ -192,17 +199,35 @@ public class GameRenderer {
         }
         shapes.end();
 
+        // "top" layers last, over everyone (the lights still go on top of them)
+        if (topLayers.length > 0) mapManager.getMapRenderer().render(topLayers);
+    }
+
+    // splits the map's layers into below / top, only when the map changes
+    private void sortLayers(TiledMap map) {
+        if (map == layersOf) return;
+        layersOf = map;
+        IntArray below = new IntArray(), top = new IntArray();
+        MapLayers layers = map.getLayers();
+        for (int i = 0; i < layers.getCount(); i++) {
+            Object value = layers.get(i).getProperties().get("top");
+            boolean isTop = value instanceof Boolean ? (Boolean) value : "true".equalsIgnoreCase(String.valueOf(value).trim());
+            if (isTop) top.add(i);
+            else below.add(i);
+        }
+        belowLayers = below.toArray();
+        topLayers = top.toArray();
     }
 
     // sprays from the old map, call on map change
     public void clearEffects() {
         blood.clear();
-        militaryRenderers.clear(); // soldiers from the old map
+        militaryRenderers.clear(); // soldiers from the old map, make them suffer
         seenBullets.clear();
         newShots.clear();
     }
 
-    // false = player not drawn, for cutscenes like sleeping
+    // false = player not drawn, for cutscenes like sleeping or idk something else 
     public void setPlayerVisible(boolean playerVisible) {
         this.playerVisible = playerVisible;
     }
